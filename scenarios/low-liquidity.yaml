@@ -1,0 +1,26 @@
+name: low-liquidity
+description: Opens a limited channel, then attempts a payment larger than outbound liquidity.
+nodes:
+  alice:
+    node: node-1
+    template: hub
+  bob:
+    node: node-2
+    template: leaf
+channels:
+  - from: alice
+    to: bob
+    capacity: "199 CKB"
+    public: false
+    one_way: true
+steps:
+  - action: list_channels
+    node: alice
+    expect: success
+  - action: pay
+    from: alice
+    to: bob
+    amount: "101 CKB"
+    expect: success
+assertions:
+  - all_steps_passed

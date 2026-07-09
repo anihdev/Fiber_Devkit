@@ -1,0 +1,151 @@
+{
+  "frames": [
+    {
+      "label": "Network startup",
+      "nodes": {
+        "nodes": [
+          {
+            "name": "node-1",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8227/",
+            "pubkey": "03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "shortPubkey": "03aaaaaaaa...aaaaaa",
+            "peerCount": 0,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          },
+          {
+            "name": "node-2",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8229/",
+            "pubkey": "03bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shortPubkey": "03bbbbbbbb...bbbbbb",
+            "peerCount": 0,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          },
+          {
+            "name": "node-3",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8231/",
+            "pubkey": "03cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "shortPubkey": "03cccccccc...cccccc",
+            "peerCount": 0,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          }
+        ]
+      },
+      "lastRun": null
+    },
+    {
+      "label": "Peers connected",
+      "nodes": {
+        "nodes": [
+          {
+            "name": "node-1",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8227/",
+            "pubkey": "03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "shortPubkey": "03aaaaaaaa...aaaaaa",
+            "peerCount": 2,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          },
+          {
+            "name": "node-2",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8229/",
+            "pubkey": "03bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shortPubkey": "03bbbbbbbb...bbbbbb",
+            "peerCount": 1,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          },
+          {
+            "name": "node-3",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8231/",
+            "pubkey": "03cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "shortPubkey": "03cccccccc...cccccc",
+            "peerCount": 1,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          }
+        ]
+      },
+      "lastRun": null
+    },
+    {
+      "label": "Funded scenario observed",
+      "nodes": {
+        "nodes": [
+          {
+            "name": "node-1",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8227/",
+            "pubkey": "03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "shortPubkey": "03aaaaaaaa...aaaaaa",
+            "peerCount": 2,
+            "readyChannelCount": 1,
+            "totalChannelCount": 1,
+            "channels": [
+              {
+                "peer": "node-2",
+                "peerPubkey": "03bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+                "state": "ChannelReady",
+                "enabled": true,
+                "localBalance": "100 CKB",
+                "remoteBalance": "0 CKB"
+              }
+            ]
+          },
+          {
+            "name": "node-2",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8229/",
+            "pubkey": "03bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "shortPubkey": "03bbbbbbbb...bbbbbb",
+            "peerCount": 1,
+            "readyChannelCount": 1,
+            "totalChannelCount": 1,
+            "channels": [
+              {
+                "peer": "node-1",
+                "peerPubkey": "03aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                "state": "ChannelReady",
+                "enabled": true,
+                "localBalance": "0 CKB",
+                "remoteBalance": "100 CKB"
+              }
+            ]
+          },
+          {
+            "name": "node-3",
+            "status": "reachable",
+            "rpcEndpoint": "http://127.0.0.1:8231/",
+            "pubkey": "03cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+            "shortPubkey": "03cccccccc...cccccc",
+            "peerCount": 1,
+            "readyChannelCount": 0,
+            "totalChannelCount": 0,
+            "channels": []
+          }
+        ]
+      },
+      "lastRun": {
+        "scenario": "basic-payment",
+        "passed": true,
+        "stepsPassed": 4,
+        "stepsFailed": 0,
+        "reportPath": ".fiber/output/report.md"
+      }
+    }
+  ]
+}

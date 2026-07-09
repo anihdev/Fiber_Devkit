@@ -1,0 +1,18 @@
+/target/
+/.fiber/
+.env
+node_modules/
+.pnpm-store/
+
+# Private planning, submission, and presentation drafts.
+AGENT.md
+task.md
+TASK.md
+SUBMISSION*.md
+*SUBMISSION*.md
+docs/pr.md
+
+
+IMPLEMENTATION_NOTES.md
+PERSONAL_NOTES.md
+submission/

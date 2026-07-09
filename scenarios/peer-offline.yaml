@@ -1,0 +1,17 @@
+name: peer-offline
+description: Demonstrates step-level failure reporting for an unreachable peer endpoint.
+nodes:
+  alice:
+    node: node-1
+    template: hub
+  offline:
+    endpoint: http://127.0.0.1:65530/
+steps:
+  - action: node_info
+    node: alice
+    expect: success
+  - action: node_info
+    node: offline
+    expect: failure
+assertions:
+  - all_steps_passed

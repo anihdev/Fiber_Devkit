@@ -1,0 +1,62 @@
+name: Fiber DevKit
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  fiber-devkit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          package-manager-cache: false
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install support dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build fiber
+        timeout-minutes: 25
+        run: cargo build --locked
+
+      - name: Typecheck support scripts
+        run: pnpm typecheck
+
+      - name: Check formatting
+        run: cargo fmt --check
+
+      - name: Run tests
+        run: cargo test --locked
+
+      - name: Run clippy
+        run: cargo clippy --locked -- -D warnings
+
+      - name: Initialize DevKit config
+        run: target/debug/fiber init --nodes 3 --template hub-spoke
+
+      - name: Pull pinned FNN image
+        run: docker pull ghcr.io/nervosnetwork/fiber:0.9.0-rc5
+
+      - name: Validate generated config
+        run: target/debug/fiber validate
+
+      - name: Run unfunded network smoke scenario
+        run: |
+          trap 'target/debug/fiber down' EXIT
+          target/debug/fiber up
+          target/debug/fiber run scenarios/network-smoke.yaml --report

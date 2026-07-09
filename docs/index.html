@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fiber DevKit Demo</title>
+  <meta name="description" content="Hosted demo for Fiber DevKit, a Rust CLI for local Fiber Network testing, diagnostics, route prediction, and CI.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3/dist/bundle/asciinema-player.min.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18202a;
+      --muted: #5b6675;
+      --line: #d9e0e7;
+      --panel: #ffffff;
+      --paper: #f7f9fb;
+      --green: #0f8b6f;
+      --blue: #2368b4;
+      --amber: #a86600;
+      --red: #b03a48;
+      --code: #101820;
+      --code-line: #263342;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    a {
+      color: var(--blue);
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .shell {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid rgba(24, 32, 42, 0.08);
+      background: rgba(247, 249, 251, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 64px;
+      gap: 24px;
+    }
+
+    .brand {
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      font-size: 0.94rem;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
+      gap: 48px;
+      align-items: center;
+      min-height: 86vh;
+      padding: 72px 0 56px;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-weight: 720;
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0 0 14px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 5rem;
+      line-height: 0.95;
+      letter-spacing: 0;
+    }
+
+    .lead {
+      margin: 24px 0 0;
+      color: var(--muted);
+      font-size: 1.15rem;
+      max-width: 58ch;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 16px;
+      border: 1px solid var(--ink);
+      border-radius: 8px;
+      color: var(--ink);
+      background: transparent;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .button.primary {
+      color: #fff;
+      background: var(--ink);
+    }
+
+    .diagram {
+      width: 100%;
+      min-height: 420px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 18px 50px rgba(24, 32, 42, 0.09);
+    }
+
+    section {
+      scroll-margin-top: 84px;
+      padding: 70px 0;
+      border-top: 1px solid rgba(24, 32, 42, 0.08);
+    }
+
+    #console {
+      scroll-margin-top: 84px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 26px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 2.2rem;
+      letter-spacing: 0;
+    }
+
+    .section-copy {
+      margin: 0;
+      color: var(--muted);
+      max-width: 68ch;
+    }
+
+    .demo-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .flow-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .flow-diagram {
+      display: block;
+      width: 100%;
+      min-height: 260px;
+      background: #fff;
+    }
+
+    .flow-copy {
+      padding: 16px 18px 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .flow-copy h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+    }
+
+    .flow-copy p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .demo-panel,
+    .info-panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .demo-panel.wide {
+      grid-column: 1 / -1;
+    }
+
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 760;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 9px;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--blue);
+      font-size: 0.77rem;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .badge.green {
+      background: var(--green);
+    }
+
+    .badge.amber {
+      background: var(--amber);
+    }
+
+    .badge.red {
+      background: var(--red);
+    }
+
+    .player {
+      min-height: 324px;
+      background: var(--code);
+    }
+
+    .cast-fallback {
+      display: none;
+      margin: 0;
+      padding: 18px;
+      color: #dce7ef;
+      background: var(--code);
+      overflow: auto;
+      min-height: 324px;
+      font: 0.88rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+    }
+
+    .install {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(260px, 0.8fr);
+      gap: 18px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 18px;
+      color: #e8eef4;
+      background: var(--code);
+      border-radius: 8px;
+      overflow: auto;
+      font: 0.92rem/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .info-panel {
+      padding: 20px;
+    }
+
+    .info-panel h3 {
+      margin: 0 0 8px;
+      font-size: 1.05rem;
+    }
+
+    .info-panel p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    th,
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #eef3f7;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    code {
+      padding: 0.1rem 0.32rem;
+      border-radius: 5px;
+      background: #e9eef3;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.92em;
+    }
+
+    .coverage {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .console-replay {
+      --console-paper: #FAFAF8;
+      --console-raised: #FFFFFF;
+      --console-ink: #16191C;
+      --console-muted: #6B7280;
+      --console-signal: #0F9D74;
+      --console-signal-soft: #E4F5EE;
+      --console-fault: #C1443B;
+      --console-fault-soft: #FBEAE8;
+      --console-amber: #B4791F;
+      --console-amber-soft: #FBF1E2;
+      --console-wire: #D8D8D3;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      gap: 18px;
+      align-items: stretch;
+      color: var(--console-ink);
+    }
+
+    .replay-panel {
+      border: 1px solid var(--console-wire);
+      border-radius: 6px;
+      background: var(--console-raised);
+      padding: 18px;
+      box-shadow: 0 14px 30px rgba(22, 25, 28, 0.05);
+    }
+
+    .replay-panel h3 {
+      margin-top: 0;
+      font-size: 1.05rem;
+    }
+
+    .replay-label {
+      margin: 0 0 14px;
+      color: var(--console-muted);
+      font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+      font-size: 0.9rem;
+    }
+
+    .replay-nodes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .replay-node {
+      border: 1px solid var(--console-wire);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--console-paper);
+    }
+
+    .replay-node h3 {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 0 0 8px;
+      font-size: 0.98rem;
+    }
+
+    .replay-node p {
+      margin: 0;
+      color: var(--console-muted);
+      font-size: 0.88rem;
+      overflow-wrap: anywhere;
+    }
+
+    .replay-node .indicator {
+      display: inline-flex;
+      gap: 6px;
+      min-height: 22px;
+      align-items: center;
+      padding: 0 8px;
+      border-radius: 6px;
+      border: 1px solid var(--console-signal);
+      color: var(--console-signal);
+      background: var(--console-signal-soft);
+      font-size: 0.74rem;
+      font-weight: 760;
+    }
+
+    .replay-node .indicator::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      border-radius: 999px;
+      background: var(--console-signal);
+    }
+
+    .replay-report {
+      display: grid;
+      gap: 10px;
+    }
+
+    .replay-report .metric {
+      border: 1px solid var(--console-wire);
+      border-radius: 6px;
+      padding: 12px;
+      background: var(--console-paper);
+    }
+
+    .replay-report span {
+      display: block;
+      color: var(--console-muted);
+      font-size: 0.76rem;
+    }
+
+    .replay-report strong {
+      overflow-wrap: anywhere;
+    }
+
+    footer {
+      padding: 36px 0 48px;
+      color: var(--muted);
+      border-top: 1px solid rgba(24, 32, 42, 0.08);
+    }
+
+    @media (max-width: 900px) {
+      .hero,
+      .install,
+      .demo-grid,
+      .flow-grid,
+      .console-replay,
+      .coverage {
+        grid-template-columns: 1fr;
+      }
+
+      .replay-nodes {
+        grid-template-columns: 1fr;
+      }
+
+      .hero {
+        min-height: auto;
+        padding-top: 54px;
+      }
+
+      .diagram {
+        min-height: 320px;
+      }
+
+      h1 {
+        font-size: 3.6rem;
+      }
+
+      h2 {
+        font-size: 1.9rem;
+      }
+
+      .section-head {
+        display: block;
+      }
+
+      .section-copy {
+        margin-top: 10px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .shell {
+        width: min(100% - 22px, 1120px);
+      }
+
+      section {
+        scroll-margin-top: 126px;
+      }
+
+      #console {
+        scroll-margin-top: 126px;
+      }
+
+      nav {
+        align-items: start;
+        flex-direction: column;
+        padding: 14px 0;
+      }
+
+      .nav-links {
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 3rem;
+      }
+
+      h2 {
+        font-size: 1.7rem;
+      }
+
+      th,
+      td {
+        padding: 12px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav class="shell" aria-label="Primary navigation">
+      <div class="brand">Fiber DevKit</div>
+      <div class="nav-links">
+        <a href="#flows">Flows</a>
+        <a href="#watch">Watch</a>
+        <a href="#console">Console</a>
+        <a href="#try">Try</a>
+        <a href="#scenarios">Scenarios</a>
+        <a href="#coverage">Coverage</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero shell">
+      <div>
+        <p class="eyebrow">Category 2 infrastructure demo</p>
+        <h1>Fiber DevKit</h1>
+        <p class="lead">
+          A Rust CLI for local Fiber Network orchestration, repeatable payment scenarios,
+          structured failure diagnosis, route prediction, report artifacts, and CI smoke tests.
+        </p>
+        <div class="hero-actions">
+          <a class="button primary" href="#watch">Watch it work</a>
+          <a class="button" href="https://github.com/anihdev/Fiber_Devkit#readme">Read the README</a>
+        </div>
+      </div>
+
+      <svg class="diagram" viewBox="0 0 820 520" role="img" aria-labelledby="diagram-title diagram-desc">
+        <title id="diagram-title">Fiber DevKit architecture</title>
+        <desc id="diagram-desc">A Rust CLI controls local Fiber nodes, scenario YAML files, diagnostics, route prediction, and CI reports.</desc>
+        <rect x="0" y="0" width="820" height="520" fill="#ffffff"/>
+        <defs>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 Z" fill="#52606f"/>
+          </marker>
+        </defs>
+
+        <rect x="54" y="56" width="216" height="90" rx="8" fill="#eaf5f1" stroke="#0f8b6f"/>
+        <text x="82" y="92" fill="#18202a" font-size="22" font-weight="700">fiber CLI</text>
+        <text x="82" y="120" fill="#52606f" font-size="16">init · up · run · doctor</text>
+
+        <rect x="54" y="220" width="216" height="74" rx="8" fill="#eef3f7" stroke="#8c98a6"/>
+        <text x="82" y="252" fill="#18202a" font-size="18" font-weight="700">Scenario YAML</text>
+        <text x="82" y="276" fill="#52606f" font-size="15">payments, failures, asserts</text>
+
+        <rect x="54" y="360" width="216" height="74" rx="8" fill="#fff6e6" stroke="#a86600"/>
+        <text x="82" y="392" fill="#18202a" font-size="18" font-weight="700">Report Artifacts</text>
+        <text x="82" y="416" fill="#52606f" font-size="15">report.md · trace.json · logs</text>
+
+        <rect x="350" y="48" width="170" height="84" rx="8" fill="#edf4ff" stroke="#2368b4"/>
+        <text x="394" y="83" fill="#18202a" font-size="18" font-weight="700">node-1</text>
+        <text x="382" y="108" fill="#52606f" font-size="14">hub · FNN RPC</text>
+
+        <rect x="598" y="160" width="170" height="84" rx="8" fill="#edf4ff" stroke="#2368b4"/>
+        <text x="642" y="195" fill="#18202a" font-size="18" font-weight="700">node-2</text>
+        <text x="629" y="220" fill="#52606f" font-size="14">leaf · channel</text>
+
+        <rect x="598" y="302" width="170" height="84" rx="8" fill="#edf4ff" stroke="#2368b4"/>
+        <text x="642" y="337" fill="#18202a" font-size="18" font-weight="700">node-3</text>
+        <text x="629" y="362" fill="#52606f" font-size="14">leaf · channel</text>
+
+        <rect x="346" y="380" width="178" height="84" rx="8" fill="#f9edf0" stroke="#b03a48"/>
+        <text x="384" y="414" fill="#18202a" font-size="18" font-weight="700">Taxonomy</text>
+        <text x="374" y="439" fill="#52606f" font-size="14">FIBER_LIQ_001 etc.</text>
+
+        <path d="M270 102 C308 98, 318 92, 350 90" fill="none" stroke="#52606f" stroke-width="2.5" marker-end="url(#arrow)"/>
+        <path d="M270 254 C340 248, 340 128, 350 110" fill="none" stroke="#52606f" stroke-width="2.5" marker-end="url(#arrow)"/>
+        <path d="M520 104 C575 118, 594 150, 606 170" fill="none" stroke="#2368b4" stroke-width="3" marker-end="url(#arrow)"/>
+        <path d="M520 118 C574 185, 594 286, 606 318" fill="none" stroke="#2368b4" stroke-width="3" marker-end="url(#arrow)"/>
+        <path d="M270 386 C318 382, 326 422, 346 422" fill="none" stroke="#52606f" stroke-width="2.5" marker-end="url(#arrow)"/>
+        <path d="M520 418 C566 406, 594 376, 606 358" fill="none" stroke="#52606f" stroke-width="2.5" marker-end="url(#arrow)"/>
+        <path d="M270 132 C332 172, 342 344, 356 386" fill="none" stroke="#52606f" stroke-width="2.5" marker-end="url(#arrow)"/>
+      </svg>
+    </section>
+
+    <section id="flows">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Flow Maps</h2>
+          <p class="section-copy">These diagrams explain how DevKit moves from setup to local Fiber nodes, then from scenarios to diagnostics, reports, route prediction, and CCH-aware comparison.</p>
+        </div>
+
+        <div class="flow-grid">
+          <article class="flow-card">
+            <svg class="flow-diagram" viewBox="0 0 360 260" role="img" aria-labelledby="setup-flow-title setup-flow-desc">
+              <title id="setup-flow-title">Setup and local network flow</title>
+              <desc id="setup-flow-desc">make setup installs dependencies and the fiber CLI, then fiber init and fiber up create and start local FNN nodes.</desc>
+              <defs>
+                <marker id="setup-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#52606f"/>
+                </marker>
+              </defs>
+              <rect width="360" height="260" fill="#ffffff"/>
+
+              <g>
+                <title>Repository checkout: the starting point after git clone.</title>
+                <rect x="26" y="28" width="132" height="54" rx="8" fill="#eef3f7" stroke="#8c98a6"/>
+                <text x="50" y="59" fill="#18202a" font-size="15" font-weight="700">repo clone</text>
+              </g>
+              <g>
+                <title>make setup installs pnpm support dependencies and the local fiber binary.</title>
+                <rect x="202" y="28" width="132" height="54" rx="8" fill="#eaf5f1" stroke="#0f8b6f"/>
+                <text x="232" y="51" fill="#18202a" font-size="15" font-weight="700">make setup</text>
+                <text x="224" y="70" fill="#52606f" font-size="12">pnpm + Cargo</text>
+              </g>
+              <g>
+                <title>fiber init writes .fiber config, generated FNN configs, node keys, and Docker Compose artifacts.</title>
+                <rect x="26" y="116" width="132" height="58" rx="8" fill="#fff6e6" stroke="#a86600"/>
+                <text x="55" y="140" fill="#18202a" font-size="15" font-weight="700">fiber init</text>
+                <text x="45" y="159" fill="#52606f" font-size="12">.fiber config</text>
+              </g>
+              <g>
+                <title>fiber up starts Dockerized FNN nodes and waits for node_info RPC readiness.</title>
+                <rect x="202" y="116" width="132" height="58" rx="8" fill="#edf4ff" stroke="#2368b4"/>
+                <text x="237" y="140" fill="#18202a" font-size="15" font-weight="700">fiber up</text>
+                <text x="225" y="159" fill="#52606f" font-size="12">3 FNN nodes</text>
+              </g>
+              <g>
+                <title>fiber inspect provides a read-only view of node reachability, peer counts, and channel state.</title>
+                <rect x="114" y="202" width="132" height="42" rx="8" fill="#f9edf0" stroke="#b03a48"/>
+                <text x="143" y="228" fill="#18202a" font-size="15" font-weight="700">fiber inspect</text>
+              </g>
+
+              <path d="M158 55 H202" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#setup-arrow)"/>
+              <path d="M268 82 C268 98, 112 96, 92 116" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#setup-arrow)"/>
+              <path d="M158 145 H202" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#setup-arrow)"/>
+              <path d="M268 174 C266 194, 216 202, 198 208" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#setup-arrow)"/>
+            </svg>
+            <div class="flow-copy">
+              <h3>Onboarding</h3>
+              <p><code>make setup</code> is only setup. It installs support dependencies and the local <code>fiber</code> CLI before any network state is created.</p>
+            </div>
+          </article>
+
+          <article class="flow-card">
+            <svg class="flow-diagram" viewBox="0 0 360 260" role="img" aria-labelledby="scenario-flow-title scenario-flow-desc">
+              <title id="scenario-flow-title">Scenario, diagnosis, and report flow</title>
+              <desc id="scenario-flow-desc">YAML scenarios run through Fiber RPC, produce JSONL step output, attach taxonomy diagnoses, and write report artifacts.</desc>
+              <defs>
+                <marker id="scenario-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#52606f"/>
+                </marker>
+              </defs>
+              <rect width="360" height="260" fill="#ffffff"/>
+
+              <g>
+                <title>Scenario YAML describes nodes, optional channel setup, steps, expectations, and assertions.</title>
+                <rect x="24" y="30" width="120" height="54" rx="8" fill="#eef3f7" stroke="#8c98a6"/>
+                <text x="47" y="54" fill="#18202a" font-size="15" font-weight="700">scenario</text>
+                <text x="53" y="72" fill="#52606f" font-size="12">YAML</text>
+              </g>
+              <g>
+                <title>fiber run executes steps through FNN JSON-RPC and prints JSONL step output.</title>
+                <rect x="216" y="30" width="120" height="54" rx="8" fill="#eaf5f1" stroke="#0f8b6f"/>
+                <text x="249" y="54" fill="#18202a" font-size="15" font-weight="700">fiber run</text>
+                <text x="246" y="72" fill="#52606f" font-size="12">JSONL steps</text>
+              </g>
+              <g>
+                <title>FNN RPC returns node, channel, graph, and payment responses from the local Docker network.</title>
+                <rect x="120" y="110" width="120" height="48" rx="8" fill="#edf4ff" stroke="#2368b4"/>
+                <text x="149" y="139" fill="#18202a" font-size="15" font-weight="700">FNN RPC</text>
+              </g>
+              <g>
+                <title>The diagnostic engine maps low-level FNN/RPC failures to taxonomy codes and remediation steps.</title>
+                <rect x="24" y="192" width="120" height="48" rx="8" fill="#f9edf0" stroke="#b03a48"/>
+                <text x="52" y="220" fill="#18202a" font-size="15" font-weight="700">doctor</text>
+              </g>
+              <g>
+                <title>Reports write report.md, logs.json, trace.json, and last-run.json under .fiber/output.</title>
+                <rect x="216" y="192" width="120" height="48" rx="8" fill="#fff6e6" stroke="#a86600"/>
+                <text x="250" y="212" fill="#18202a" font-size="15" font-weight="700">reports</text>
+                <text x="241" y="229" fill="#52606f" font-size="12">md/json/trace</text>
+              </g>
+
+              <path d="M144 57 H216" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#scenario-arrow)"/>
+              <path d="M276 84 C274 104, 234 110, 220 120" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#scenario-arrow)"/>
+              <path d="M142 136 C104 150, 86 174, 84 192" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#scenario-arrow)"/>
+              <path d="M218 136 C254 150, 274 174, 276 192" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#scenario-arrow)"/>
+            </svg>
+            <div class="flow-copy">
+              <h3>Scenario Evidence</h3>
+              <p>Raw JSONL remains machine-readable, while <code>fiber doctor</code> and <code>fiber report</code> produce the human-facing explanation.</p>
+            </div>
+          </article>
+
+          <article class="flow-card">
+            <svg class="flow-diagram" viewBox="0 0 360 260" role="img" aria-labelledby="route-flow-title route-flow-desc">
+              <title id="route-flow-title">Route prediction and CCH comparison flow</title>
+              <desc id="route-flow-desc">fiber predict reads local channels and graph data, scores native Fiber route confidence, and compares CCH availability without inventing live bridge data.</desc>
+              <defs>
+                <marker id="route-arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0,0 L8,3 L0,6 Z" fill="#52606f"/>
+                </marker>
+              </defs>
+              <rect width="360" height="260" fill="#ffffff"/>
+
+              <g>
+                <title>fiber predict evaluates a configured source node, destination node, amount, and asset.</title>
+                <rect x="28" y="28" width="130" height="54" rx="8" fill="#eaf5f1" stroke="#0f8b6f"/>
+                <text x="55" y="52" fill="#18202a" font-size="15" font-weight="700">fiber predict</text>
+                <text x="62" y="70" fill="#52606f" font-size="12">node-1 to node-2</text>
+              </g>
+              <g>
+                <title>Local channel and graph data feed the native Fiber route confidence model.</title>
+                <rect x="202" y="28" width="130" height="54" rx="8" fill="#edf4ff" stroke="#2368b4"/>
+                <text x="224" y="52" fill="#18202a" font-size="15" font-weight="700">route data</text>
+                <text x="218" y="70" fill="#52606f" font-size="12">channels + graph</text>
+              </g>
+              <g>
+                <title>The analyzer returns probability, confidence label, warnings, and alternative routes when available.</title>
+                <rect x="28" y="120" width="130" height="54" rx="8" fill="#fff6e6" stroke="#a86600"/>
+                <text x="54" y="144" fill="#18202a" font-size="15" font-weight="700">native score</text>
+                <text x="55" y="162" fill="#52606f" font-size="12">probability + fee</text>
+              </g>
+              <g>
+                <title>CCH Tier 1 reports bridge availability and mechanism; live order fields require a CCH actor and Lightning backend.</title>
+                <rect x="202" y="120" width="130" height="54" rx="8" fill="#f9edf0" stroke="#b03a48"/>
+                <text x="233" y="144" fill="#18202a" font-size="15" font-weight="700">CCH view</text>
+                <text x="219" y="162" fill="#52606f" font-size="12">honest availability</text>
+              </g>
+              <g>
+                <title>simulate --dry-run delegates to the same analyzer and never executes a payment.</title>
+                <rect x="115" y="202" width="130" height="42" rx="8" fill="#eef3f7" stroke="#8c98a6"/>
+                <text x="150" y="219" fill="#18202a" font-size="15" font-weight="700">simulate</text>
+                <text x="151" y="236" fill="#52606f" font-size="13" font-weight="700">--dry-run</text>
+              </g>
+
+              <path d="M158 64 C176 82, 186 82, 202 64" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#route-arrow)"/>
+              <path d="M268 82 C268 104, 132 100, 94 120" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#route-arrow)"/>
+              <path d="M268 82 V120" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#route-arrow)"/>
+              <path d="M94 174 C112 196, 144 202, 164 207" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#route-arrow)"/>
+              <path d="M266 174 C244 196, 212 202, 194 207" fill="none" stroke="#52606f" stroke-width="2.2" marker-end="url(#route-arrow)"/>
+            </svg>
+            <div class="flow-copy">
+              <h3>Route Intelligence</h3>
+              <p>Native Fiber gets a confidence score. CCH gets an availability/mechanism statement unless real Lightning-backed order data exists.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="watch">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Watch It Work</h2>
+          <p class="section-copy">Short terminal recordings show the core DevKit workflow without requiring judges to install Docker, Rust, or FNN locally.</p>
+        </div>
+
+        <div class="demo-grid">
+          <article class="demo-panel wide">
+            <div class="panel-head">
+              <h3 class="panel-title">Bring up a three-node Fiber network</h3>
+              <span class="badge green">orchestration</span>
+            </div>
+            <div class="player" data-cast="./casts/demo-network.cast"></div>
+            <pre class="cast-fallback">Open ./casts/demo-network.cast to view the terminal recording.</pre>
+          </article>
+
+          <article class="demo-panel">
+            <div class="panel-head">
+              <h3 class="panel-title">Run a funded happy-path payment</h3>
+              <span class="badge green">scenario</span>
+            </div>
+            <div class="player" data-cast="./casts/demo-basic-payment.cast"></div>
+            <pre class="cast-fallback">Open ./casts/demo-basic-payment.cast to view the terminal recording.</pre>
+          </article>
+
+          <article class="demo-panel">
+            <div class="panel-head">
+              <h3 class="panel-title">Diagnose a liquidity failure</h3>
+              <span class="badge red">diagnostics</span>
+            </div>
+            <div class="player" data-cast="./casts/demo-low-liquidity.cast"></div>
+            <pre class="cast-fallback">Open ./casts/demo-low-liquidity.cast to view the terminal recording.</pre>
+          </article>
+
+          <article class="demo-panel">
+            <div class="panel-head">
+              <h3 class="panel-title">Predict route confidence</h3>
+              <span class="badge amber">routing</span>
+            </div>
+            <div class="player" data-cast="./casts/demo-predict.cast"></div>
+            <pre class="cast-fallback">Open ./casts/demo-predict.cast to view the terminal recording.</pre>
+          </article>
+
+          <article class="demo-panel">
+            <div class="panel-head">
+              <h3 class="panel-title">Explain a taxonomy code</h3>
+              <span class="badge">doctor</span>
+            </div>
+            <div class="player" data-cast="./casts/demo-doctor.cast"></div>
+            <pre class="cast-fallback">Open ./casts/demo-doctor.cast to view the terminal recording.</pre>
+          </article>
+
+          <article class="demo-panel wide">
+            <div class="panel-head">
+              <h3 class="panel-title">Generate reports and CI configuration</h3>
+              <span class="badge green">reporting</span>
+            </div>
+            <div class="player" data-cast="./casts/demo-report-ci.cast"></div>
+            <pre class="cast-fallback">Open ./casts/demo-report-ci.cast to view the terminal recording.</pre>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="shell" id="console">
+        <div class="section-head">
+          <h2>Fiber DevKit Console</h2>
+          <p class="section-copy">Recorded replay — run <code>fiber console</code> locally against your own network for live data.</p>
+        </div>
+        <div class="console-replay">
+          <article class="replay-panel">
+            <p class="replay-label" id="consoleReplayLabel">Loading recorded console replay.</p>
+            <div class="replay-nodes" id="consoleReplayNodes"></div>
+          </article>
+          <article class="replay-panel">
+            <h3>Last Run Artifact</h3>
+            <div class="replay-report" id="consoleReplayReport"></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="try">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Try It Yourself</h2>
+          <p class="section-copy">The fastest path is the unfunded smoke test. Funded payment scenarios require testnet CKB on generated node keys.</p>
+        </div>
+        <div class="install">
+          <pre>git clone https://github.com/anihdev/Fiber_Devkit.git
+cd Fiber_Devkit
+make help
+make setup
+fiber --help
+fiber init --nodes 3 --template hub-spoke
+fiber up
+fiber inspect
+fiber run scenarios/network-smoke.yaml --report
+fiber down</pre>
+          <div class="info-panel">
+            <h3>Setup command</h3>
+            <p><code>make help</code> lists repository shortcuts. <code>make setup</code> installs TypeScript support dependencies with pnpm and installs the repo's Rust <code>fiber</code> binary locally. After crates.io publication, the install path can become <code>cargo install fiber-devkit</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scenarios">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Reference Scenarios</h2>
+          <p class="section-copy">The shipped MVP includes five reference scenarios plus one clean unfunded smoke scenario. Roadmap-only scenarios are documented separately.</p>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Funded Keys</th>
+              <th>What It Demonstrates</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>network-smoke.yaml</code></td>
+              <td>No</td>
+              <td>Clean generated network RPC reachability and graph sanity checks.</td>
+            </tr>
+            <tr>
+              <td><code>basic-payment.yaml</code></td>
+              <td>Yes</td>
+              <td>Funded single-hop channel setup and successful keysend payment.</td>
+            </tr>
+            <tr>
+              <td><code>multi-hop-routing.yaml</code></td>
+              <td>Yes</td>
+              <td>Hub-spoke multi-hop payment behavior across generated nodes.</td>
+            </tr>
+            <tr>
+              <td><code>low-liquidity.yaml</code></td>
+              <td>Yes</td>
+              <td>Insufficient-liquidity failure surfaced as structured diagnosis output.</td>
+            </tr>
+            <tr>
+              <td><code>peer-offline.yaml</code></td>
+              <td>No</td>
+              <td>Unreachable endpoint handling and step-level failure reporting.</td>
+            </tr>
+            <tr>
+              <td><code>channel-exhaustion.yaml</code></td>
+              <td>Yes</td>
+              <td>Low route-confidence prediction before an over-capacity payment attempt.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="coverage">
+      <div class="shell">
+        <div class="section-head">
+          <h2>Category 2 Coverage</h2>
+          <p class="section-copy">DevKit goes deep on local testing, diagnostics, route confidence, and node visibility while documenting deferred infrastructure clearly.</p>
+        </div>
+        <div class="coverage">
+          <div class="info-panel">
+            <h3>Strong</h3>
+            <p>Local test networks, YAML scenarios, reports, CI scaffold, failure taxonomy, and <code>fiber doctor</code>.</p>
+          </div>
+          <div class="info-panel">
+            <h3>Shipped Polish</h3>
+            <p><code>fiber inspect</code>, route prediction, graph-topology warnings, CCH comparison output, and self-hosted demo recordings.</p>
+          </div>
+          <div class="info-panel">
+            <h3>Documented Roadmap</h3>
+            <p>Live CCH order execution, alerting, full peer detail, payment-hash lookup, graph SVG, watchtower scenarios, and fee-policy simulation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="shell">
+      <p>Fiber DevKit is infrastructure for developers and operators building on Fiber Network. See <a href="https://github.com/anihdev/Fiber_Devkit#readme">README.md</a>, <a href="https://github.com/anihdev/Fiber_Devkit/blob/main/SCENARIO_FORMAT.md">SCENARIO_FORMAT.md</a>, <a href="https://github.com/anihdev/Fiber_Devkit/blob/main/TAXONOMY.md">TAXONOMY.md</a>, and <a href="./cch-setup.md">CCH setup notes</a>.</p>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/asciinema-player@3/dist/bundle/asciinema-player.min.js"></script>
+  <script>
+    const options = {
+      cols: 100,
+      rows: 22,
+      autoPlay: true,
+      loop: true,
+      preload: true,
+      fit: "width",
+      theme: "asciinema"
+    };
+
+    document.querySelectorAll("[data-cast]").forEach((element) => {
+      const fallback = element.nextElementSibling;
+      if (!window.AsciinemaPlayer) {
+        element.style.display = "none";
+        if (fallback) fallback.style.display = "block";
+        return;
+      }
+
+      window.AsciinemaPlayer.create(element.dataset.cast, element, options);
+    });
+
+    function scrollToHashTarget() {
+      if (!window.location.hash || window.location.hash === "#") return;
+      const target = document.getElementById(window.location.hash.slice(1));
+      if (!target) return;
+      const headerHeight = document.querySelector("header")?.getBoundingClientRect().height || 0;
+      const top = target.getBoundingClientRect().top + window.scrollY - headerHeight - 18;
+      window.scrollTo({ top, behavior: "auto" });
+    }
+
+    window.addEventListener("hashchange", () => window.setTimeout(scrollToHashTarget, 0));
+    [0, 350, 900, 1800].forEach((delay) => {
+      window.setTimeout(scrollToHashTarget, delay);
+    });
+
+    const replayNodes = document.getElementById("consoleReplayNodes");
+    const replayReport = document.getElementById("consoleReplayReport");
+    const replayLabel = document.getElementById("consoleReplayLabel");
+
+    function html(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function renderConsoleReplay(frame) {
+      replayLabel.textContent = `${frame.label} · recorded console replay`;
+      replayNodes.innerHTML = frame.nodes.nodes.map((node) => `
+        <article class="replay-node">
+          <h3>${html(node.name)} <span class="indicator">${html(node.status)}</span></h3>
+          <p>${html(node.rpcEndpoint)}</p>
+          <p>pubkey ${html(node.shortPubkey)}</p>
+          <p>peers ${html(node.peerCount)} · channels ${html(node.readyChannelCount)}/${html(node.totalChannelCount)} ready</p>
+        </article>
+      `).join("");
+
+      if (!frame.lastRun) {
+        replayReport.innerHTML = '<p class="section-copy">No scenario report artifact yet in this replay frame.</p>';
+        return;
+      }
+
+      replayReport.innerHTML = `
+        <div class="metric"><span>Scenario</span><strong>${html(frame.lastRun.scenario)}</strong></div>
+        <div class="metric"><span>Status</span><strong>${frame.lastRun.passed ? "PASS" : "FAIL"}</strong></div>
+        <div class="metric"><span>Steps</span><strong>${html(frame.lastRun.stepsPassed)} passed · ${html(frame.lastRun.stepsFailed)} failed</strong></div>
+        <div class="metric"><span>Artifact</span><strong>${html(frame.lastRun.reportPath)}</strong></div>
+      `;
+    }
+
+    fetch("./console-replay-data.json")
+      .then((response) => response.json())
+      .then((data) => {
+        let index = 0;
+        renderConsoleReplay(data.frames[index]);
+        window.setInterval(() => {
+          index = (index + 1) % data.frames.length;
+          renderConsoleReplay(data.frames[index]);
+        }, 2600);
+      })
+      .catch((error) => {
+        replayLabel.textContent = `Recorded replay unavailable: ${error.message}`;
+      });
+  </script>
+</body>
+</html>

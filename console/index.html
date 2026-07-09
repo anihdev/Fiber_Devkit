@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fiber DevKit Console</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-shell">
+      <div>
+        <p class="eyebrow">Fiber DevKit · read-only local view</p>
+        <h1>Fiber DevKit Console</h1>
+      </div>
+      <div class="refresh-status" id="refreshStatus" aria-live="polite">
+        <span class="connection-dot pending" id="connectionDot" aria-hidden="true"></span>
+        <span>Updated <time id="refreshTime">waiting for nodes</time></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="section-rail" aria-label="Console sections">
+      <a class="rail-link active" href="#nodes" data-section-link="nodes">Nodes</a>
+      <a class="rail-link" href="#route" data-section-link="route">Route</a>
+      <a class="rail-link" href="#diagnostics" data-section-link="diagnostics">Diagnostics</a>
+      <a class="rail-link" href="#last-run" data-section-link="last-run">Last Run</a>
+    </nav>
+
+    <main>
+      <section class="section" id="nodes" data-section>
+        <div class="section-head">
+          <div>
+            <p class="section-kicker">Local network visibility</p>
+            <h2>Nodes</h2>
+          </div>
+          <p>
+            Refreshes local node health every 2.5 seconds from <code>/api/nodes</code>.
+            Display scores are client-side indicators, not diagnostic truth.
+          </p>
+        </div>
+        <div class="score-note">
+          Score formula: 40% reachability + 30% channel readiness ratio + 30% peer presence.
+        </div>
+        <div class="node-grid" id="nodeGrid" aria-live="polite"></div>
+      </section>
+
+      <section class="section" id="route" data-section>
+        <article class="panel route-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Read-only analysis</p>
+              <h2>Route Simulator</h2>
+            </div>
+            <span>Calls <code>/api/predict</code></span>
+          </div>
+          <form id="predictForm" class="predict-form">
+            <label>
+              From
+              <input name="from" value="node-1" autocomplete="off">
+            </label>
+            <label>
+              To
+              <input name="to" value="node-2" autocomplete="off">
+            </label>
+            <label>
+              Amount
+              <input name="amount" value="1" autocomplete="off">
+            </label>
+            <label>
+              Asset
+              <input name="asset" value="CKB" autocomplete="off">
+            </label>
+            <label class="check">
+              <input name="cross_chain" type="checkbox">
+              Cross-chain comparison
+            </label>
+            <button type="submit">Analyze</button>
+          </form>
+
+          <div class="console-output" aria-live="polite">
+            <div class="console-output-head">
+              <span>→ prediction.json</span>
+              <button class="ghost-button" type="button" id="copyPrediction" disabled>Copy raw JSON</button>
+            </div>
+            <div class="prediction-summary" id="predictionSummary"></div>
+            <div class="prediction-tree empty" id="predictionTree">
+              <div class="graph-glyph" aria-hidden="true">
+                <span></span>
+                <i></i>
+                <span></span>
+              </div>
+              <p>Run an analysis to compare native Fiber and CCH routes.</p>
+            </div>
+            <details class="raw-json">
+              <summary>Raw JSON</summary>
+              <pre id="predictionJson" class="json-block">No prediction requested yet.</pre>
+            </details>
+          </div>
+        </article>
+      </section>
+
+      <section class="section" id="diagnostics" data-section>
+        <article class="panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-kicker">Taxonomy-grounded reference</p>
+              <h2>Relevant Diagnostics</h2>
+            </div>
+            <span>Contextual documentation only</span>
+          </div>
+          <div class="filters" id="taxonomyFilters"></div>
+          <div class="taxonomy-list" id="taxonomyList"></div>
+        </article>
+      </section>
+
+      <section class="section" id="last-run" data-section>
+        <article class="last-run-card">
+          <div>
+            <p class="section-kicker">Report artifact</p>
+            <h2>Last Run</h2>
+            <p>Shows the latest scenario report artifact when <code>/api/last-run</code> is available.</p>
+          </div>
+          <div id="lastRun" class="last-run-body">Checking for the latest scenario artifact.</div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

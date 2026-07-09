@@ -1,0 +1,28 @@
+name: channel-exhaustion
+description: Predicts low confidence when a channel cannot carry the requested amount.
+nodes:
+  alice:
+    node: node-1
+    template: hub
+  bob:
+    node: node-2
+    template: leaf
+channels:
+  - from: alice
+    to: bob
+    capacity: "199 CKB"
+    public: false
+    one_way: true
+steps:
+  - action: predict
+    from: alice
+    to: bob
+    amount: "101 CKB"
+    expect_probability_below: 0.2
+  - action: pay
+    from: alice
+    to: bob
+    amount: "101 CKB"
+    expect: failure
+assertions:
+  - all_steps_passed

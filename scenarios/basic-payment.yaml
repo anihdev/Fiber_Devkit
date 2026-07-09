@@ -1,0 +1,27 @@
+name: basic-payment
+description: Opens a funded single-hop channel, then sends a keysend payment from the hub to one leaf.
+nodes:
+  alice:
+    node: node-1
+    template: hub
+  bob:
+    node: node-2
+    template: leaf
+channels:
+  - from: alice
+    to: bob
+    capacity: "199 CKB"
+    public: false
+    one_way: true
+steps:
+  - action: node_info
+    node: alice
+  - action: list_channels
+    node: alice
+  - action: pay
+    from: alice
+    to: bob
+    amount: "1 CKB"
+    expect: success
+assertions:
+  - all_steps_passed

@@ -1,0 +1,27 @@
+name: network-smoke
+description: Verifies a clean generated DevKit network is reachable without requiring funded channels.
+nodes:
+  alice:
+    node: node-1
+    template: hub
+  bob:
+    node: node-2
+    template: leaf
+  carol:
+    node: node-3
+    template: leaf
+steps:
+  - action: node_info
+    node: alice
+  - action: node_info
+    node: bob
+  - action: node_info
+    node: carol
+  - action: graph_nodes
+    node: alice
+    expect: success
+  - action: graph_channels
+    node: alice
+    expect: success
+assertions:
+  - all_steps_passed

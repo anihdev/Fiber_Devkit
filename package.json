@@ -1,0 +1,26 @@
+{
+  "name": "fiber-devkit-support",
+  "private": true,
+  "license": "MIT",
+  "packageManager": "pnpm@10.33.0",
+  "type": "module",
+  "scripts": {
+    "balances:nodes": "tsx scripts/devkit-node-balances.ts",
+    "fund:nodes": "tsx scripts/devkit-fund-nodes.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ckb-ccc/core": "^1.15.0",
+    "dotenv": "^16.4.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+[template]
+name = "leaf"
+description = "MVP leaf profile used by Fiber DevKit when generating .fiber/nodes/<name>/config.yml for FNN."
+
+[fiber]
+max_inbound_peers = 8
+min_outbound_peers = 0
+auto_accept_channel_ckb_funding_amount = 9900000000
+open_channel_auto_accept_min_ckb_funding_amount = 100000000
+tlc_fee_proportional_millionths = 1000

@@ -1,0 +1,33 @@
+name: multi-hop-routing
+description: Opens hub-spoke channels and sends a payment across the hub.
+nodes:
+  hub:
+    node: node-1
+    template: hub
+  alice:
+    node: node-2
+    template: leaf
+  carol:
+    node: node-3
+    template: leaf
+channels:
+  - from: alice
+    to: hub
+    capacity: "199 CKB"
+  - from: hub
+    to: carol
+    capacity: "199 CKB"
+steps:
+  - action: graph_nodes
+    node: hub
+    expect: success
+  - action: graph_channels
+    node: hub
+    expect: success
+  - action: pay
+    from: alice
+    to: carol
+    amount: "1 CKB"
+    expect: success
+assertions:
+  - all_steps_passed
