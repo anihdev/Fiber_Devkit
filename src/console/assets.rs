@@ -8,3 +8,5 @@ pub const INDEX_HTML: &str = include_str!("../../console/index.html");
 pub const APP_JS: &str = include_str!("../../console/app.js");
 /// Embedded console stylesheet.
 pub const STYLE_CSS: &str = include_str!("../../console/style.css");
+/// Embedded adaptive SVG favicon.
+pub const FAVICON_SVG: &str = include_str!("../../console/favicon.svg");

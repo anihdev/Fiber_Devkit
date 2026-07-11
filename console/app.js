@@ -4,15 +4,21 @@ const state = {
   taxonomy: [],
   activeCategory: "Route",
   predictionCodes: new Set(),
-  lastRawPrediction: ""
+  lastRawPrediction: "",
+  nodeSnapshots: new Map(),
+  lastSuccessfulPollAt: null,
+  pulseTimer: null
 };
 
 const nodeGrid = document.getElementById("nodeGrid");
 const refreshStatus = document.getElementById("refreshStatus");
+const refreshLabel = document.getElementById("refreshLabel");
 const refreshTime = document.getElementById("refreshTime");
+const refreshAge = document.getElementById("refreshAge");
 const connectionDot = document.getElementById("connectionDot");
 const predictForm = document.getElementById("predictForm");
 const predictionSummary = document.getElementById("predictionSummary");
+const routeFlow = document.getElementById("routeFlow");
 const predictionTree = document.getElementById("predictionTree");
 const predictionJson = document.getElementById("predictionJson");
 const copyPrediction = document.getElementById("copyPrediction");
@@ -113,16 +119,62 @@ function setupRailNavigation() {
   navigateToSection(sectionIdFromHash(), false);
 }
 
-function setConnectionStatus(success, message) {
+function prefersReducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function formatAbsoluteTime(date) {
+  return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+}
+
+function relativeAgeText(date) {
+  const seconds = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+  if (seconds < 60) {
+    return `${seconds}s ago`;
+  }
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) {
+    return `${minutes}m ago`;
+  }
+  const hours = Math.floor(minutes / 60);
+  return `${hours}h ago`;
+}
+
+function updateRelativeTimestamp() {
+  if (!state.lastSuccessfulPollAt) {
+    refreshTime.textContent = "";
+    refreshTime.removeAttribute("datetime");
+    refreshAge.textContent = "";
+    return;
+  }
+
+  refreshTime.dateTime = state.lastSuccessfulPollAt.toISOString();
+  refreshTime.textContent = formatAbsoluteTime(state.lastSuccessfulPollAt);
+  refreshAge.textContent = relativeAgeText(state.lastSuccessfulPollAt);
+}
+
+function markPollSuccess() {
+  state.lastSuccessfulPollAt = new Date();
+  refreshLabel.textContent = "Updated";
+  updateRelativeTimestamp();
+}
+
+function markPollFailure() {
+  refreshLabel.textContent = "Refresh failed";
+  updateRelativeTimestamp();
+}
+
+function setConnectionStatus(success) {
   refreshStatus.classList.toggle("is-ok", success);
   refreshStatus.classList.toggle("is-fault", !success);
   connectionDot.className = `connection-dot ${success ? "ok" : "fault"}`;
-  refreshTime.textContent = message;
 
-  if (success) {
-    connectionDot.classList.remove("pulse");
-    void connectionDot.offsetWidth;
+  if (success && !prefersReducedMotion()) {
     connectionDot.classList.add("pulse");
+    window.clearTimeout(state.pulseTimer);
+    state.pulseTimer = window.setTimeout(() => {
+      connectionDot.classList.remove("pulse");
+    }, 700);
   }
 }
 
@@ -153,6 +205,49 @@ function scoreRing(score) {
       <text x="26" y="30">${score}</text>
     </svg>
   `;
+}
+
+function nodeSnapshot(node) {
+  return {
+    status: node.status || "unreachable",
+    peerCount: Number(node.peerCount || 0),
+    readyChannelCount: Number(node.readyChannelCount || 0),
+    totalChannelCount: Number(node.totalChannelCount || 0),
+    healthScore: healthScore(node)
+  };
+}
+
+function nodeChangeClass(nodeName, snapshot) {
+  const previous = state.nodeSnapshots.get(nodeName);
+  if (!previous) {
+    return "";
+  }
+
+  if (previous.status === "reachable" && snapshot.status !== "reachable") {
+    return "flash-fault";
+  }
+  if (previous.status !== "reachable" && snapshot.status === "reachable") {
+    return "flash-signal";
+  }
+  if (
+    snapshot.healthScore < previous.healthScore
+    || snapshot.peerCount < previous.peerCount
+    || snapshot.readyChannelCount < previous.readyChannelCount
+  ) {
+    return "flash-fault";
+  }
+  if (
+    snapshot.healthScore > previous.healthScore
+    || snapshot.peerCount > previous.peerCount
+    || snapshot.readyChannelCount > previous.readyChannelCount
+  ) {
+    return "flash-signal";
+  }
+  if (snapshot.totalChannelCount !== previous.totalChannelCount) {
+    return "flash-amber";
+  }
+
+  return "";
 }
 
 function renderChannels(node) {
@@ -204,17 +299,22 @@ function renderNodes(output) {
   const nodes = output.nodes || [];
   if (nodes.length === 0) {
     nodeGrid.innerHTML = '<div class="panel empty-state">No configured nodes found.</div>';
+    state.nodeSnapshots = new Map();
     return;
   }
 
+  const nextSnapshots = new Map();
   nodeGrid.innerHTML = nodes.map((node) => {
-    const score = healthScore(node);
+    const snapshot = nodeSnapshot(node);
+    const changeClass = nodeChangeClass(node.name, snapshot);
+    const score = snapshot.healthScore;
     const reachable = node.status === "reachable";
     const ready = display(node.readyChannelCount);
     const total = display(node.totalChannelCount);
+    nextSnapshots.set(node.name, snapshot);
 
     return `
-      <article class="node-card ${reachable ? "reachable" : "unreachable"}">
+      <article class="node-card ${reachable ? "reachable" : "unreachable"} ${changeClass}">
         <div class="node-title">
           <div>
             <h3>${escapeHtml(node.name)}</h3>
@@ -240,8 +340,7 @@ function renderNodes(output) {
 
         ${reachable ? renderChannels(node) : `
           <div class="unreachable-copy">
-            DevKit could not reach this node's FNN RPC endpoint. Start the local network
-            with <code>fiber up</code>, or run <code>fiber validate --live</code> to check RPC readiness.
+            Could not reach this node. Run <code>fiber up</code> if the network isn't started.
           </div>
           <details class="technical-details">
             <summary>Technical details and next checks</summary>
@@ -251,15 +350,18 @@ function renderNodes(output) {
       </article>
     `;
   }).join("");
+  state.nodeSnapshots = nextSnapshots;
 }
 
 async function refreshNodes() {
   try {
     const output = await fetchJson("/api/nodes");
     renderNodes(output);
-    setConnectionStatus(true, new Date().toLocaleTimeString());
+    setConnectionStatus(true);
+    markPollSuccess();
   } catch (error) {
-    setConnectionStatus(false, `refresh failed ${new Date().toLocaleTimeString()}`);
+    setConnectionStatus(false);
+    markPollFailure();
     nodeGrid.innerHTML = `
       <div class="panel empty-state">
         Could not read configured nodes: ${escapeHtml(error.message)}
@@ -331,6 +433,102 @@ function summaryMetric(label, value) {
   `;
 }
 
+function confidenceTone(confidence, probability) {
+  const normalized = String(confidence || "").toLowerCase();
+  if (normalized === "high") return "signal";
+  if (normalized === "medium") return "amber";
+  if (normalized === "low") return "fault";
+
+  const numeric = Number(probability);
+  if (Number.isFinite(numeric) && numeric > 0.85) return "signal";
+  if (Number.isFinite(numeric) && numeric > 0.6) return "amber";
+  return "fault";
+}
+
+function pathNodeLabel(node) {
+  if (node && typeof node === "object") {
+    return node.name || node.alias || node.pubkey || JSON.stringify(node);
+  }
+  return node;
+}
+
+function renderPath(path) {
+  return path.map((node, index) => `
+    ${index > 0 ? '<span class="route-segment" aria-hidden="true"></span>' : ""}
+    <span class="route-node">${escapeHtml(display(pathNodeLabel(node)))}</span>
+  `).join("");
+}
+
+function cchDetails(cch) {
+  return [
+    cch?.mechanism ? `Mechanism: ${cch.mechanism}` : "",
+    cch?.reason ? `Reason: ${cch.reason}` : "",
+    cch?.note ? `Note: ${cch.note}` : ""
+  ].filter(Boolean).join(" · ");
+}
+
+function renderCchFlow(cch) {
+  if (!cch) {
+    return "";
+  }
+
+  if (cch.available === false) {
+    return `
+      <div class="route-flow-row cch-row unavailable">
+        <span class="route-flow-label">CCH</span>
+        <div class="cch-line broken">
+          <span class="cch-state">Unavailable - no live CCH path</span>
+          <span>${escapeHtml(display(cchDetails(cch)))}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="route-flow-row cch-row">
+      <span class="route-flow-label">CCH</span>
+      <div class="cch-line">
+        <span class="cch-state">${escapeHtml(display(cch.mechanism || "availability reported"))}</span>
+        <span>${escapeHtml(display(cchDetails(cch)))}</span>
+      </div>
+    </div>
+  `;
+}
+
+function renderRouteFlow(result) {
+  const native = predictionRoot(result);
+  const path = Array.isArray(native.bestRoute?.path) && native.bestRoute.path.length > 0
+    ? native.bestRoute.path
+    : null;
+  const tone = confidenceTone(native.confidence, native.probability);
+
+  if (!path) {
+    routeFlow.className = "route-flow unavailable";
+    routeFlow.innerHTML = `
+      <div class="route-flow-row">
+        <span class="route-flow-label">Native</span>
+        <div class="route-path unavailable">
+          <span class="route-unavailable">No native Fiber route returned in <code>native.bestRoute.path</code>.</span>
+        </div>
+      </div>
+      ${renderCchFlow(result.cchBridged)}
+    `;
+    return;
+  }
+
+  routeFlow.className = `route-flow ${tone}`;
+  routeFlow.innerHTML = `
+    <div class="route-flow-row">
+      <span class="route-flow-label">Native</span>
+      <div class="route-path ${tone}">
+        ${renderPath(path)}
+        <span class="route-traveler" aria-hidden="true"></span>
+      </div>
+    </div>
+    ${renderCchFlow(result.cchBridged)}
+  `;
+}
+
 function renderPrediction(result) {
   const native = predictionRoot(result);
   const route = native.bestRoute;
@@ -360,6 +558,7 @@ function renderPrediction(result) {
   }
 
   predictionTree.className = "prediction-tree";
+  renderRouteFlow(result);
   predictionTree.innerHTML = renderValue(result);
   state.lastRawPrediction = JSON.stringify(result, null, 2);
   predictionJson.textContent = state.lastRawPrediction;
@@ -370,6 +569,15 @@ function renderPrediction(result) {
 function renderPredictionError(error) {
   const payload = { error: error.message };
   predictionSummary.innerHTML = "";
+  routeFlow.className = "route-flow unavailable";
+  routeFlow.innerHTML = `
+    <div class="route-flow-row">
+      <span class="route-flow-label">Native</span>
+      <div class="route-path unavailable">
+        <span class="route-unavailable">Prediction request failed.</span>
+      </div>
+    </div>
+  `;
   predictionTree.className = "prediction-tree";
   predictionTree.innerHTML = renderValue(payload);
   state.lastRawPrediction = JSON.stringify(payload, null, 2);
@@ -391,6 +599,8 @@ predictForm.addEventListener("submit", async (event) => {
   }
 
   predictionSummary.innerHTML = "";
+  routeFlow.className = "route-flow loading";
+  routeFlow.textContent = "Waiting for prediction result.";
   predictionTree.className = "prediction-tree loading";
   predictionTree.textContent = "Analyzing route...";
   predictionJson.textContent = "Analyzing route...";
@@ -506,4 +716,6 @@ setupRailNavigation();
 refreshNodes();
 loadTaxonomy();
 loadLastRun();
+updateRelativeTimestamp();
 setInterval(refreshNodes, 2500);
+setInterval(updateRelativeTimestamp, 1000);

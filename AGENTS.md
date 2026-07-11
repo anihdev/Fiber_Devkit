@@ -178,7 +178,8 @@ fiber-devkit/
 ├── console/                   # embedded frontend source assets
 │   ├── index.html
 │   ├── app.js
-│   └── style.css
+│   ├── style.css
+│   └── favicon.svg            # adaptive transparent FD browser icon
 ├── scenarios/                 # MVP scenarios — created during Demos 2–4, see Section 10
 │   ├── network-smoke.yaml
 │   ├── basic-payment.yaml

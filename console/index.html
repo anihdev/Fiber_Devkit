@@ -4,6 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fiber DevKit Console</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -15,7 +16,11 @@
       </div>
       <div class="refresh-status" id="refreshStatus" aria-live="polite">
         <span class="connection-dot pending" id="connectionDot" aria-hidden="true"></span>
-        <span>Updated <time id="refreshTime">waiting for nodes</time></span>
+        <span class="refresh-copy">
+          <span class="refresh-label" id="refreshLabel">waiting for nodes</span>
+          <time class="refresh-absolute" id="refreshTime" datetime=""></time>
+          <span class="refresh-age" id="refreshAge" aria-hidden="true"></span>
+        </span>
       </div>
     </div>
   </header>
@@ -85,6 +90,9 @@
               <button class="ghost-button" type="button" id="copyPrediction" disabled>Copy raw JSON</button>
             </div>
             <div class="prediction-summary" id="predictionSummary"></div>
+            <div class="route-flow empty" id="routeFlow">
+              <p>Route flow appears after analysis.</p>
+            </div>
             <div class="prediction-tree empty" id="predictionTree">
               <div class="graph-glyph" aria-hidden="true">
                 <span></span>

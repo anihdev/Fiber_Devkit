@@ -99,6 +99,9 @@ async fn route_request(request: &str, project_root: PathBuf) -> HttpResponse {
             assets::APP_JS,
         ),
         "/style.css" => text_response(HttpStatus::Ok, "text/css; charset=utf-8", assets::STYLE_CSS),
+        "/favicon.svg" | "/favicon.ico" => {
+            text_response(HttpStatus::Ok, "image/svg+xml", assets::FAVICON_SVG)
+        }
         "/api/nodes" => api_nodes(&project_root).await,
         "/api/predict" => api_predict(&project_root, query.unwrap_or_default()).await,
         "/api/taxonomy" => json_response(HttpStatus::Ok, ENTRIES),
@@ -388,5 +391,17 @@ mod tests {
             Some("node-1")
         );
         assert_eq!(channel_node_name("/api/nodes/node-1"), None);
+    }
+
+    #[tokio::test]
+    async fn serves_svg_favicon_for_explicit_and_browser_fallback_paths() {
+        for path in ["/favicon.svg", "/favicon.ico"] {
+            let request = format!("GET {path} HTTP/1.1\r\nHost: localhost\r\n\r\n");
+            let response = route_request(&request, PathBuf::from(".")).await;
+
+            assert_eq!(response.status.code_reason().0, 200);
+            assert_eq!(response.content_type, "image/svg+xml");
+            assert!(response.body.contains("Fiber DevKit FD monogram"));
+        }
     }
 }
