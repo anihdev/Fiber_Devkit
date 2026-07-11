@@ -231,15 +231,33 @@ It passes when every setup step and scenario step matched its expected outcome.
 JSON object. Exit code `0` means all assertions passed. A non-zero exit means at
 least one step or assertion failed.
 
+Every completed run also updates `.fiber/output/last-run.json`, even when `--report` is not
+present. This persisted result is the source used by the later `fiber report` command.
+
 `fiber run <scenario.yaml> --report` also writes:
 
-- `.fiber/output/report.md`: human-readable scenario summary.
-- `.fiber/output/logs.json`: full structured `RunResult`.
+- `.fiber/output/report.md`: human-readable outcome plus grouped failure causes, likely
+  triggers, and complete remediation guidance. Expected failures are explained separately
+  from unexpected failures.
+- `.fiber/output/logs.json`: full structured `RunResult`, including embedded diagnosis
+  metadata for observed RPC failures.
 - `.fiber/output/trace.json`: OTel-compatible span document for scenario steps.
 - `.fiber/output/last-run.json`: persisted run result used by `fiber report`.
 
-`fiber report --format md` or `fiber report --format json` regenerates artifacts from
-the most recent persisted run and prints the requested artifact path.
+`fiber report --format md` and `fiber report --format json` both regenerate the complete
+artifact set from the most recent persisted run. The flag only selects the path printed to
+stdout:
+
+- `--format md` prints the `.fiber/output/report.md` path.
+- `--format json` prints the `.fiber/output/logs.json` path.
+
+The JSON selection is the structured `RunResult`; it is not a JSON conversion of the
+Markdown report.
+
+For every unexpected failed step, the Markdown report states what happened, why it failed,
+and what to do next. Repeated taxonomy codes are grouped into one root-cause entry. A step
+that fails as declared by `expect: failure` still receives an **Expected Failure Analysis**
+entry so the report explains the negative test without marking the scenario failed.
 
 ## Reference Scenarios
 

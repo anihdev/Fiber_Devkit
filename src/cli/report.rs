@@ -16,9 +16,12 @@ use crate::AppResult;
   fiber report --format md
   fiber report --format json
 
-Regenerates artifacts from `.fiber/output/last-run.json`; it does not rerun scenarios or query live nodes.")]
+Regenerates `report.md`, `logs.json`, `trace.json`, and `last-run.json` from the latest
+persisted run; it does not rerun scenarios or query live nodes. `--format md` prints the
+path to `report.md`. `--format json` prints the path to `logs.json`. Both choices regenerate
+the complete artifact set.")]
 pub struct Args {
-    /// Report format to emphasize after regenerating all artifacts.
+    /// Select the artifact path to print: `md` for report.md or `json` for logs.json.
     #[arg(long, value_enum, default_value = "md")]
     pub format: ReportFormat,
 }

@@ -79,11 +79,11 @@ file into its own storage format.
 | `fiber up` / `fiber down` / `fiber reset` | Start, stop, or rebuild the local Docker network |
 | `fiber inspect [node-name] [--channels] [--json]` | Read-only node health, peer count, and channel-state view |
 | `fiber console [--port 7717] [--open]` | Read-only local browser view over inspect, predict, taxonomy, and last-run data |
-| `fiber run <scenario.yaml> [--report]` | Execute scenario steps and assertions; optionally write report artifacts |
+| `fiber run <scenario.yaml> [--report]` | Execute any scenario and persist `last-run.json`; `--report` writes the complete artifact set |
 | `fiber doctor <log-file\|taxonomy-code\|raw-error> [--explain]` | Explain known Fiber failure classes |
 | `fiber predict <from> <to> <amount> [--asset CKB] [--cross-chain]` | Score native Fiber route confidence without sending a payment |
 | `fiber simulate <from> <to> <amount> --dry-run` | Compatibility dry-run path delegating to `predict` |
-| `fiber report --format md\|json` | Regenerate artifacts from the most recent run |
+| `fiber report --format md\|json` | Regenerate all latest-run artifacts and print the selected Markdown or JSON path |
 | `fiber ci init` | Scaffold `.github/workflows/fiber-ci.yml` |
 
 ## Development
@@ -123,15 +123,47 @@ and a local `.env` treasury key. See Quickstart: Funded Payment Scenarios and
 
 ## Reports
 
-`fiber run scenarios/network-smoke.yaml --report` writes:
+Every completed scenario run updates `.fiber/output/last-run.json`, including a plain run:
 
-- `.fiber/output/report.md`: readable scenario summary.
-- `.fiber/output/logs.json`: full structured run result.
+```bash
+fiber run <scenario.yaml>
+```
+
+Add `--report` to any scenario to immediately generate the full report artifact set:
+
+```bash
+fiber run <scenario.yaml> --report
+
+# Examples
+fiber run scenarios/network-smoke.yaml --report
+fiber run scenarios/basic-payment.yaml --report
+```
+
+This writes:
+
+- `.fiber/output/report.md`: readable scenario outcome with grouped failure causes, likely
+  triggers, and complete remediation steps. Expected failures are explained separately.
+- `.fiber/output/logs.json`: full structured run result, including embedded diagnosis
+  metadata for observed RPC failures.
 - `.fiber/output/trace.json`: OTel-compatible span JSON.
 - `.fiber/output/last-run.json`: persisted source for `fiber report`.
 
-`fiber report --format md` regenerates the report from the latest run and prints the
-Markdown artifact path.
+After any completed run, `fiber report` regenerates **all four artifacts** from
+`last-run.json`. The format flag only selects which artifact path is printed:
+
+```bash
+fiber report --format md    # regenerate everything; print the report.md path
+fiber report --format json  # regenerate everything; print the logs.json path
+```
+
+`--format md` selects the human-readable Markdown analysis. `--format json` selects the
+full structured `RunResult`; it does not convert the Markdown report into JSON or limit
+generation to one file.
+
+Every unexpected failed step is included in **Failure Analysis** with what happened, why it
+failed, and what to do next. Repeated taxonomy codes are grouped to keep reports readable.
+Failures that were declared with `expect: failure` appear under **Expected Failure Analysis**
+so successful negative tests still preserve their cause and remediation guidance.
 
 ## Inspect Network State
 

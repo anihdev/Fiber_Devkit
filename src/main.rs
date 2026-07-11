@@ -105,3 +105,45 @@ async fn run() -> AppResult<()> {
         Commands::Console(args) => console_cmd::execute(project_root, args).await,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory;
+
+    #[test]
+    fn run_help_explains_latest_run_persistence_and_report_artifacts() {
+        let help = subcommand_help("run");
+
+        assert!(help.contains("Every completed run"));
+        assert!(help.contains("last-run.json"));
+        assert!(help.contains("--report"));
+        assert!(help.contains("report.md"));
+        assert!(help.contains("logs.json"));
+        assert!(help.contains("trace.json"));
+    }
+
+    #[test]
+    fn report_help_explains_format_path_selection() {
+        let help = subcommand_help("report");
+
+        assert!(help.contains("Both choices regenerate"));
+        assert!(help.contains("the complete artifact set"));
+        assert!(help.contains("--format md"));
+        assert!(help.contains("path to `report.md`"));
+        assert!(help.contains("--format json"));
+        assert!(help.contains("path to `logs.json`"));
+    }
+
+    fn subcommand_help(name: &str) -> String {
+        let mut command = Cli::command();
+        let subcommand = command
+            .find_subcommand_mut(name)
+            .expect("subcommand should exist");
+        let mut output = Vec::new();
+        subcommand
+            .write_long_help(&mut output)
+            .expect("help should render");
+        String::from_utf8(output).expect("help should be UTF-8")
+    }
+}

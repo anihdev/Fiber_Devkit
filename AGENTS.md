@@ -230,6 +230,11 @@ fiber ci init
 Keep command help concrete. `fiber --help` should show the high-level command list, while
 `fiber <command> --help` should explain command-specific flags and examples.
 
+Reporting help must distinguish persistence from rendering: every completed `fiber run`
+updates `last-run.json`; `fiber run --report` writes the complete artifact set; and
+`fiber report --format md|json` always regenerates all artifacts while selecting only the
+Markdown or structured-JSON path printed to stdout.
+
 ## Runtime RPC Surface
 
 The implemented Rust RPC client currently exposes:
@@ -279,6 +284,12 @@ tool must query configured nodes with `list_payments`, find the matching `paymen
 feed `failed_error` into the diagnostic engine.
 
 Current taxonomy docs live in `TAXONOMY.md`.
+
+Markdown reports must preserve the diagnostic contract for every failed outcome: what
+happened, why it failed, and what to do next. Group repeated taxonomy codes, include all
+remediation steps, explain expected failures separately, and provide useful fallback
+guidance when no taxonomy diagnosis is attached. JSON artifacts should retain the complete
+structured diagnosis rather than replacing it with presentation-only text.
 
 ## Route Intelligence
 

@@ -17,11 +17,14 @@ use crate::{app_error, AppResult};
   fiber run scenarios/network-smoke.yaml
   fiber run scenarios/basic-payment.yaml --report
 
-Prints one JSON object per step plus a final summary. `--report` also writes human and machine artifacts under `.fiber/output/`.")]
+Every completed run prints one JSON object per step plus a final summary and updates
+`.fiber/output/last-run.json`. `--report` also writes `report.md`, `logs.json`, and
+`trace.json` for any scenario. The Markdown report explains unexpected failures,
+expected failures, and remediation guidance when diagnosis metadata is available.")]
 pub struct Args {
     /// Path to a Fiber DevKit scenario YAML file.
     pub scenario: PathBuf,
-    /// Write `.fiber/output/report.md`, `logs.json`, and `trace.json`.
+    /// Write all human and machine report artifacts; `last-run.json` is always updated.
     #[arg(long)]
     pub report: bool,
 }
