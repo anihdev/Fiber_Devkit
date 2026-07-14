@@ -4,17 +4,27 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Fiber DevKit Console</title>
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-shell">
-      <div>
-        <p class="eyebrow">Fiber DevKit · read-only local view</p>
-        <h1>Fiber DevKit Console</h1>
+      <div class="brand-lockup">
+        <img class="brand-mark" src="/apple-touch-icon.png" alt="">
+        <div>
+          <p class="eyebrow">Fiber DevKit · read-only local view</p>
+          <h1>Fiber DevKit Console</h1>
+        </div>
       </div>
-      <div class="refresh-status" id="refreshStatus" aria-live="polite">
+      <div
+        class="refresh-status"
+        id="refreshStatus"
+        aria-live="polite"
+        data-tooltip="Node visibility refreshes every 2.5 seconds. The timestamp is the last successful poll."
+      >
         <span class="connection-dot pending" id="connectionDot" aria-hidden="true"></span>
         <span class="refresh-copy">
           <span class="refresh-label" id="refreshLabel">waiting for nodes</span>
@@ -27,10 +37,30 @@
 
   <div class="layout">
     <nav class="section-rail" aria-label="Console sections">
-      <a class="rail-link active" href="#nodes" data-section-link="nodes">Nodes</a>
-      <a class="rail-link" href="#route" data-section-link="route">Route</a>
-      <a class="rail-link" href="#diagnostics" data-section-link="diagnostics">Diagnostics</a>
-      <a class="rail-link" href="#last-run" data-section-link="last-run">Last Run</a>
+      <a
+        class="rail-link active"
+        href="#nodes"
+        data-section-link="nodes"
+        data-tooltip="Node reachability, peer counts, channel readiness, and local RPC status."
+      >Nodes</a>
+      <a
+        class="rail-link"
+        href="#route"
+        data-section-link="route"
+        data-tooltip="Read-only native route confidence and CCH availability analysis."
+      >Route</a>
+      <a
+        class="rail-link"
+        href="#diagnostics"
+        data-section-link="diagnostics"
+        data-tooltip="Taxonomy-grounded failure descriptions and remediation guidance."
+      >Diagnostics</a>
+      <a
+        class="rail-link"
+        href="#last-run"
+        data-section-link="last-run"
+        data-tooltip="Latest persisted scenario result and report artifact status."
+      >Last Run</a>
     </nav>
 
     <main>
@@ -77,17 +107,29 @@
               Asset
               <input name="asset" value="CKB" autocomplete="off">
             </label>
-            <label class="check">
+            <label
+              class="check"
+              data-tooltip="Include CCH availability and mechanism context. This does not create or execute a bridge order."
+            >
               <input name="cross_chain" type="checkbox">
               Cross-chain comparison
             </label>
-            <button type="submit">Analyze</button>
+            <button
+              type="submit"
+              data-tooltip="Run read-only route prediction. No payment is sent."
+            >Analyze</button>
           </form>
 
           <div class="console-output" aria-live="polite">
             <div class="console-output-head">
               <span>→ prediction.json</span>
-              <button class="ghost-button" type="button" id="copyPrediction" disabled>Copy raw JSON</button>
+              <button
+                class="ghost-button"
+                type="button"
+                id="copyPrediction"
+                data-tooltip="Copy the complete prediction response as formatted JSON."
+                disabled
+              >Copy raw JSON</button>
             </div>
             <div class="prediction-summary" id="predictionSummary"></div>
             <div class="route-flow empty" id="routeFlow">
@@ -102,7 +144,7 @@
               <p>Run an analysis to compare native Fiber and CCH routes.</p>
             </div>
             <details class="raw-json">
-              <summary>Raw JSON</summary>
+              <summary data-tooltip="Show the unmodified prediction response returned by DevKit.">Raw JSON</summary>
               <pre id="predictionJson" class="json-block">No prediction requested yet.</pre>
             </details>
           </div>
@@ -136,6 +178,7 @@
     </main>
   </div>
 
+  <div class="ui-tooltip" id="uiTooltip" role="tooltip" hidden></div>
   <script src="/app.js"></script>
 </body>
 </html>

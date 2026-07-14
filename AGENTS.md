@@ -179,7 +179,9 @@ fiber-devkit/
 │   ├── index.html
 │   ├── app.js
 │   ├── style.css
-│   └── favicon.svg            # adaptive transparent FD browser icon
+│   ├── favicon-16x16.png      # Fiber DevKit browser icon
+│   ├── favicon-32x32.png
+│   └── apple-touch-icon.png
 ├── scenarios/                 # MVP scenarios — created during Demos 2–4, see Section 10
 │   ├── network-smoke.yaml
 │   ├── basic-payment.yaml

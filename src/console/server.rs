@@ -99,8 +99,14 @@ async fn route_request(request: &str, project_root: PathBuf) -> HttpResponse {
             assets::APP_JS,
         ),
         "/style.css" => text_response(HttpStatus::Ok, "text/css; charset=utf-8", assets::STYLE_CSS),
-        "/favicon.svg" | "/favicon.ico" => {
-            text_response(HttpStatus::Ok, "image/svg+xml", assets::FAVICON_SVG)
+        "/favicon-16x16.png" => {
+            binary_response(HttpStatus::Ok, "image/png", assets::FAVICON_16_PNG)
+        }
+        "/favicon-32x32.png" | "/favicon.ico" => {
+            binary_response(HttpStatus::Ok, "image/png", assets::FAVICON_32_PNG)
+        }
+        "/apple-touch-icon.png" => {
+            binary_response(HttpStatus::Ok, "image/png", assets::APPLE_TOUCH_ICON_PNG)
         }
         "/api/nodes" => api_nodes(&project_root).await,
         "/api/predict" => api_predict(&project_root, query.unwrap_or_default()).await,
@@ -306,7 +312,7 @@ async fn write_response(stream: &mut TcpStream, response: HttpResponse) -> io::R
         response.body.len()
     );
     stream.write_all(header.as_bytes()).await?;
-    stream.write_all(response.body.as_bytes()).await
+    stream.write_all(&response.body).await
 }
 
 fn json_response<T: Serialize + ?Sized>(status: HttpStatus, value: &T) -> HttpResponse {
@@ -328,14 +334,26 @@ fn text_response(
     HttpResponse {
         status,
         content_type,
-        body: body.into(),
+        body: body.into().into_bytes(),
+    }
+}
+
+fn binary_response(
+    status: HttpStatus,
+    content_type: &'static str,
+    body: &'static [u8],
+) -> HttpResponse {
+    HttpResponse {
+        status,
+        content_type,
+        body: body.to_vec(),
     }
 }
 
 struct HttpResponse {
     status: HttpStatus,
     content_type: &'static str,
-    body: String,
+    body: Vec<u8>,
 }
 
 #[derive(Clone, Copy)]
@@ -394,14 +412,19 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn serves_svg_favicon_for_explicit_and_browser_fallback_paths() {
-        for path in ["/favicon.svg", "/favicon.ico"] {
+    async fn serves_png_favicons_and_touch_icon() {
+        for path in [
+            "/favicon-16x16.png",
+            "/favicon-32x32.png",
+            "/favicon.ico",
+            "/apple-touch-icon.png",
+        ] {
             let request = format!("GET {path} HTTP/1.1\r\nHost: localhost\r\n\r\n");
             let response = route_request(&request, PathBuf::from(".")).await;
 
             assert_eq!(response.status.code_reason().0, 200);
-            assert_eq!(response.content_type, "image/svg+xml");
-            assert!(response.body.contains("Fiber DevKit FD monogram"));
+            assert_eq!(response.content_type, "image/png");
+            assert!(response.body.starts_with(b"\x89PNG\r\n\x1a\n"));
         }
     }
 }

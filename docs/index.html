@@ -7,7 +7,7 @@
   <meta name="description" content="Hosted demo for Fiber DevKit, a Rust CLI for local Fiber Network testing, diagnostics, route prediction, and CI.">
   <link rel="icon" type="image/png" sizes="32x32" href="./favicon-32x32.png">
   <link rel="icon" type="image/png" sizes="16x16" href="./favicon-16x16.png">
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/asciinema-player@3/dist/bundle/asciinema-player.min.css">
   <style>
     :root {
@@ -361,6 +361,8 @@
       --console-raised: #FFFFFF;
       --console-ink: #16191C;
       --console-muted: #6B7280;
+      --console-brand: #087ED6;
+      --console-brand-soft: #E7F5FF;
       --console-signal: #0F9D74;
       --console-signal-soft: #E4F5EE;
       --console-fault: #C1443B;
@@ -369,9 +371,9 @@
       --console-amber-soft: #FBF1E2;
       --console-wire: #D8D8D3;
       display: grid;
-      grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+      grid-template-columns: minmax(0, 1.28fr) minmax(340px, 0.72fr);
       gap: 18px;
-      align-items: stretch;
+      align-items: start;
       color: var(--console-ink);
     }
 
@@ -390,7 +392,7 @@
 
     .replay-label {
       margin: 0 0 14px;
-      color: var(--console-muted);
+      color: var(--console-brand);
       font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
       font-size: 0.9rem;
     }
@@ -415,6 +417,7 @@
       gap: 8px;
       margin: 0 0 8px;
       font-size: 0.98rem;
+      white-space: nowrap;
     }
 
     .replay-node p {
@@ -448,6 +451,7 @@
 
     .replay-report {
       display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -458,10 +462,33 @@
       background: var(--console-paper);
     }
 
+    .replay-report .metric:nth-child(n + 3) {
+      grid-column: 1 / -1;
+    }
+
     .replay-report span {
       display: block;
-      color: var(--console-muted);
+      color: var(--console-brand);
       font-size: 0.76rem;
+    }
+
+    .console-section-title {
+      display: flex;
+      align-items: center;
+      flex: 0 0 auto;
+      gap: 12px;
+    }
+
+    .console-section-title img {
+      width: 42px;
+      height: 42px;
+      flex: 0 0 42px;
+      border-radius: 9px;
+    }
+
+    .console-section-title h2 {
+      margin: 0;
+      white-space: nowrap;
     }
 
     .replay-report strong {
@@ -525,6 +552,14 @@
 
       #console {
         scroll-margin-top: 126px;
+      }
+
+      .replay-report {
+        grid-template-columns: 1fr;
+      }
+
+      .console-section-title h2 {
+        white-space: normal;
       }
 
       nav {
@@ -865,7 +900,10 @@
     <section>
       <div class="shell" id="console">
         <div class="section-head">
-          <h2>Fiber DevKit Console</h2>
+          <div class="console-section-title">
+            <img src="./apple-touch-icon.png" alt="">
+            <h2>Fiber DevKit Console</h2>
+          </div>
           <p class="section-copy">Recorded replay — run <code>fiber console</code> locally against your own network for live data.</p>
         </div>
         <div class="console-replay">
@@ -1046,17 +1084,19 @@ fiber down</pre>
           <p>peers ${html(node.peerCount)} · channels ${html(node.readyChannelCount)}/${html(node.totalChannelCount)} ready</p>
         </article>
       `).join("");
+    }
 
-      if (!frame.lastRun) {
-        replayReport.innerHTML = '<p class="section-copy">No scenario report artifact yet in this replay frame.</p>';
+    function renderReplayReport(lastRun) {
+      if (!lastRun) {
+        replayReport.innerHTML = '<p class="section-copy">No recorded scenario report artifact is available.</p>';
         return;
       }
 
       replayReport.innerHTML = `
-        <div class="metric"><span>Scenario</span><strong>${html(frame.lastRun.scenario)}</strong></div>
-        <div class="metric"><span>Status</span><strong>${frame.lastRun.passed ? "PASS" : "FAIL"}</strong></div>
-        <div class="metric"><span>Steps</span><strong>${html(frame.lastRun.stepsPassed)} passed · ${html(frame.lastRun.stepsFailed)} failed</strong></div>
-        <div class="metric"><span>Artifact</span><strong>${html(frame.lastRun.reportPath)}</strong></div>
+        <div class="metric"><span>Scenario</span><strong>${html(lastRun.scenario)}</strong></div>
+        <div class="metric"><span>Status</span><strong>${lastRun.passed ? "PASS" : "FAIL"}</strong></div>
+        <div class="metric"><span>Steps</span><strong>${html(lastRun.stepsPassed)} passed · ${html(lastRun.stepsFailed)} failed</strong></div>
+        <div class="metric"><span>Artifact</span><strong>${html(lastRun.reportPath)}</strong></div>
       `;
     }
 
@@ -1064,6 +1104,8 @@ fiber down</pre>
       .then((response) => response.json())
       .then((data) => {
         let index = 0;
+        const artifactFrame = [...data.frames].reverse().find((frame) => frame.lastRun);
+        renderReplayReport(artifactFrame?.lastRun || null);
         renderConsoleReplay(data.frames[index]);
         window.setInterval(() => {
           index = (index + 1) % data.frames.length;

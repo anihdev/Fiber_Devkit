@@ -3,6 +3,8 @@
   --paper-raised: #FFFFFF;
   --ink: #16191C;
   --ink-muted: #6B7280;
+  --brand: #087ED6;
+  --brand-soft: #E7F5FF;
   --signal: #0F9D74;
   --signal-soft: #E4F5EE;
   --fault: #C1443B;
@@ -47,7 +49,7 @@ button:focus-visible,
 input:focus-visible,
 summary:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--ink);
+  outline: 2px solid var(--brand);
   outline-offset: 3px;
 }
 
@@ -94,10 +96,24 @@ p {
   gap: 18px;
 }
 
+.brand-lockup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.brand-mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 8px;
+}
+
 .eyebrow,
 .section-kicker {
   margin: 0 0 3px;
-  color: var(--signal);
+  color: var(--brand);
   font-size: 0.72rem;
   font-weight: 760;
   text-transform: uppercase;
@@ -221,9 +237,9 @@ h3 {
 }
 
 .rail-link.active {
-  border-left-color: var(--signal);
+  border-left-color: var(--brand);
   color: var(--ink);
-  background: var(--signal-soft);
+  background: var(--brand-soft);
   font-weight: 760;
 }
 
@@ -469,7 +485,7 @@ main {
 
 .metric span {
   display: block;
-  color: var(--signal);
+  color: var(--brand);
   font-family: var(--font-mono);
   font-size: var(--label-size);
   font-weight: 760;
@@ -585,7 +601,7 @@ input {
 .check input {
   width: 18px;
   min-height: 18px;
-  accent-color: var(--signal);
+  accent-color: var(--brand);
 }
 
 button {
@@ -600,8 +616,8 @@ button {
 }
 
 button:hover {
-  background: var(--signal);
-  border-color: var(--signal);
+  background: var(--brand);
+  border-color: var(--brand);
 }
 
 button:disabled {
@@ -691,7 +707,7 @@ button:disabled {
 }
 
 .route-flow-label {
-  color: var(--signal);
+  color: var(--brand);
   font-family: var(--font-mono);
   font-size: var(--label-size);
   font-weight: 760;
@@ -849,9 +865,9 @@ button:disabled {
 .graph-glyph span {
   width: 22px;
   height: 22px;
-  border: 2px solid var(--signal);
+  border: 2px solid var(--brand);
   border-radius: 999px;
-  background: var(--signal-soft);
+  background: var(--brand-soft);
 }
 
 .graph-glyph i {
@@ -896,7 +912,7 @@ button:disabled {
 
 .json-number,
 .json-primitive {
-  color: var(--signal);
+  color: var(--brand);
 }
 
 .json-null,
@@ -941,9 +957,9 @@ button:disabled {
 
 .filter.active,
 .filter:hover {
-  border-color: var(--signal);
-  color: var(--signal);
-  background: var(--signal-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+  background: var(--brand-soft);
 }
 
 .taxonomy-list {
@@ -1028,6 +1044,27 @@ button:disabled {
 
 .last-run-body code {
   overflow-wrap: anywhere;
+}
+
+.ui-tooltip {
+  position: fixed;
+  z-index: 100;
+  width: max-content;
+  max-width: min(290px, calc(100vw - 16px));
+  padding: 8px 10px;
+  border: 1px solid var(--wire-strong);
+  border-radius: var(--radius);
+  color: var(--paper-raised);
+  background: var(--ink);
+  box-shadow: 0 10px 24px rgba(22, 25, 28, 0.2);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+}
+
+.ui-tooltip[hidden] {
+  display: none;
 }
 
 @media (max-width: 980px) {

@@ -25,8 +25,10 @@ const copyPrediction = document.getElementById("copyPrediction");
 const taxonomyFilters = document.getElementById("taxonomyFilters");
 const taxonomyList = document.getElementById("taxonomyList");
 const lastRun = document.getElementById("lastRun");
+const uiTooltip = document.getElementById("uiTooltip");
 const railLinks = Array.from(document.querySelectorAll("[data-section-link]"));
 const sections = Array.from(document.querySelectorAll("[data-section]"));
+let activeTooltipTarget = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -39,6 +41,125 @@ function escapeHtml(value) {
 
 function display(value) {
   return value === null || value === undefined || value === "" ? "—" : value;
+}
+
+function tooltipTarget(value) {
+  return value instanceof Element ? value.closest("[data-tooltip]") : null;
+}
+
+function positionTooltip(target) {
+  if (!target?.isConnected || uiTooltip.hidden) {
+    return;
+  }
+
+  const gap = 10;
+  const viewportPadding = 8;
+  const targetRect = target.getBoundingClientRect();
+  const tooltipRect = uiTooltip.getBoundingClientRect();
+  let left = targetRect.left + (targetRect.width - tooltipRect.width) / 2;
+  let top = targetRect.top - tooltipRect.height - gap;
+
+  left = Math.min(
+    Math.max(left, viewportPadding),
+    window.innerWidth - tooltipRect.width - viewportPadding
+  );
+  if (top < viewportPadding) {
+    top = targetRect.bottom + gap;
+  }
+  top = Math.min(
+    Math.max(top, viewportPadding),
+    window.innerHeight - tooltipRect.height - viewportPadding
+  );
+
+  uiTooltip.style.left = `${Math.round(left)}px`;
+  uiTooltip.style.top = `${Math.round(top)}px`;
+}
+
+function showTooltip(target) {
+  const message = target?.dataset.tooltip?.trim();
+  if (!message) {
+    return;
+  }
+
+  activeTooltipTarget = target;
+  uiTooltip.textContent = message;
+  uiTooltip.hidden = false;
+
+  const describedBy = new Set((target.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+  describedBy.add(uiTooltip.id);
+  target.setAttribute("aria-describedby", [...describedBy].join(" "));
+  positionTooltip(target);
+}
+
+function hideTooltip(target = activeTooltipTarget) {
+  if (!target || target !== activeTooltipTarget) {
+    return;
+  }
+
+  const describedBy = (target.getAttribute("aria-describedby") || "")
+    .split(/\s+/)
+    .filter((id) => id && id !== uiTooltip.id);
+  if (describedBy.length > 0) {
+    target.setAttribute("aria-describedby", describedBy.join(" "));
+  } else {
+    target.removeAttribute("aria-describedby");
+  }
+
+  activeTooltipTarget = null;
+  uiTooltip.hidden = true;
+  uiTooltip.textContent = "";
+}
+
+function setupTooltips() {
+  document.addEventListener("pointerover", (event) => {
+    const target = tooltipTarget(event.target);
+    if (target && target !== activeTooltipTarget) {
+      hideTooltip();
+      showTooltip(target);
+    }
+  });
+
+  document.addEventListener("pointerout", (event) => {
+    if (!activeTooltipTarget) {
+      return;
+    }
+    if (event.relatedTarget instanceof Node && activeTooltipTarget.contains(event.relatedTarget)) {
+      return;
+    }
+    hideTooltip();
+  });
+
+  document.addEventListener("focusin", (event) => {
+    const target = tooltipTarget(event.target);
+    if (target) {
+      hideTooltip();
+      showTooltip(target);
+    }
+  });
+
+  document.addEventListener("focusout", (event) => {
+    if (!activeTooltipTarget) {
+      return;
+    }
+    if (event.relatedTarget instanceof Node && activeTooltipTarget.contains(event.relatedTarget)) {
+      return;
+    }
+    hideTooltip();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      hideTooltip();
+    }
+  });
+  window.addEventListener("scroll", () => positionTooltip(activeTooltipTarget), { passive: true });
+  window.addEventListener("resize", () => positionTooltip(activeTooltipTarget));
+
+  new MutationObserver(() => {
+    if (activeTooltipTarget && !activeTooltipTarget.isConnected) {
+      hideTooltip();
+    }
+  }).observe(document.body, { childList: true, subtree: true });
 }
 
 async function fetchJson(path) {
@@ -198,8 +319,13 @@ function scoreRing(score) {
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
   return `
-    <svg class="score-ring ${scoreTone(score)}" viewBox="0 0 52 52" role="img" aria-label="Client-side display score ${score} out of 100">
-      <title>Client-side display score. Formula: ${SCORE_FORMULA}.</title>
+    <svg
+      class="score-ring ${scoreTone(score)}"
+      viewBox="0 0 52 52"
+      role="img"
+      aria-label="Client-side display score ${score} out of 100"
+      data-tooltip="Client-side readiness score ${score}/100. Formula: ${SCORE_FORMULA}."
+    >
       <circle class="score-ring-bg" cx="26" cy="26" r="${radius}"></circle>
       <circle class="score-ring-meter" cx="26" cy="26" r="${radius}" style="stroke-dasharray:${circumference};stroke-dashoffset:${offset};"></circle>
       <text x="26" y="30">${score}</text>
@@ -270,7 +396,7 @@ function renderChannels(node) {
 
   return `
     <details class="channel-details">
-      <summary>${channels.length > 0 ? `Channels (${channels.length})` : "No current channels"}</summary>
+      <summary data-tooltip="Show channels returned by list_channels for this node.">${channels.length > 0 ? `Channels (${channels.length})` : "No current channels"}</summary>
       ${rows || empty}
     </details>
   `;
@@ -320,7 +446,11 @@ function renderNodes(output) {
             <h3>${escapeHtml(node.name)}</h3>
             <p>${escapeHtml(display(node.rpcEndpoint))}</p>
           </div>
-          <div class="node-status">
+          <div
+            class="node-status"
+            aria-label="Node RPC status: ${escapeHtml(display(node.status))}"
+            data-tooltip="RPC reachability from the latest node poll."
+          >
             <span class="status-dot ${reachable ? "ok" : "fault"}" aria-hidden="true"></span>
             <span class="status-chip ${reachable ? "ok" : "fault"}">${escapeHtml(display(node.status))}</span>
           </div>
@@ -343,7 +473,7 @@ function renderNodes(output) {
             Could not reach this node. Run <code>fiber up</code> if the network isn't started.
           </div>
           <details class="technical-details">
-            <summary>Technical details and next checks</summary>
+            <summary data-tooltip="Show the raw RPC error and suggested recovery checks.">Technical details and next checks</summary>
             <pre>${escapeHtml(nodeFailureDetails(node))}</pre>
           </details>
         `}
@@ -474,7 +604,10 @@ function renderCchFlow(cch) {
 
   if (cch.available === false) {
     return `
-      <div class="route-flow-row cch-row unavailable">
+      <div
+        class="route-flow-row cch-row unavailable"
+        data-tooltip="CCH availability is shown without inventing route probability, hop count, or path."
+      >
         <span class="route-flow-label">CCH</span>
         <div class="cch-line broken">
           <span class="cch-state">Unavailable - no live CCH path</span>
@@ -485,7 +618,10 @@ function renderCchFlow(cch) {
   }
 
   return `
-    <div class="route-flow-row cch-row">
+    <div
+      class="route-flow-row cch-row"
+      data-tooltip="CCH availability is shown without inventing route probability, hop count, or path."
+    >
       <span class="route-flow-label">CCH</span>
       <div class="cch-line">
         <span class="cch-state">${escapeHtml(display(cch.mechanism || "availability reported"))}</span>
@@ -505,7 +641,7 @@ function renderRouteFlow(result) {
   if (!path) {
     routeFlow.className = "route-flow unavailable";
     routeFlow.innerHTML = `
-      <div class="route-flow-row">
+      <div class="route-flow-row" data-tooltip="No native path was returned by the read-only route analyzer.">
         <span class="route-flow-label">Native</span>
         <div class="route-path unavailable">
           <span class="route-unavailable">No native Fiber route returned in <code>native.bestRoute.path</code>.</span>
@@ -518,7 +654,7 @@ function renderRouteFlow(result) {
 
   routeFlow.className = `route-flow ${tone}`;
   routeFlow.innerHTML = `
-    <div class="route-flow-row">
+      <div class="route-flow-row" data-tooltip="Best native Fiber route returned by bestRoute.path.">
       <span class="route-flow-label">Native</span>
       <div class="route-path ${tone}">
         ${renderPath(path)}
@@ -550,7 +686,10 @@ function renderPrediction(result) {
 
   if (result.cchBridged && result.cchBridged.available === false) {
     predictionSummary.insertAdjacentHTML("beforeend", `
-      <div class="cch-note">
+      <div
+        class="cch-note"
+        data-tooltip="CCH comparison is informational until a live CCH actor and Lightning backend are configured."
+      >
         <strong>CCH unavailable</strong>
         <span>${escapeHtml(result.cchBridged.reason)}</span>
       </div>
@@ -641,7 +780,11 @@ function categories() {
 
 function renderTaxonomyFilters() {
   taxonomyFilters.innerHTML = categories().map((category) => `
-    <button class="filter ${category === state.activeCategory ? "active" : ""}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>
+    <button
+      class="filter ${category === state.activeCategory ? "active" : ""}"
+      data-category="${escapeHtml(category)}"
+      data-tooltip="${escapeHtml(category)} diagnostic entries."
+    >${escapeHtml(category)}</button>
   `).join("");
 
   taxonomyFilters.querySelectorAll(".filter").forEach((button) => {
@@ -697,7 +840,10 @@ async function loadLastRun() {
     lastRun.innerHTML = `
       <div class="last-run-title">
         <h3>${escapeHtml(display(run.scenario))}</h3>
-        <span class="result-chip ${run.passed ? "pass" : "fail"}">${run.passed ? "PASS" : "FAIL"}</span>
+        <span
+          class="result-chip ${run.passed ? "pass" : "fail"}"
+          data-tooltip="${run.passed ? "Every scenario step matched its expectation." : "One or more scenario steps did not match their expectation."}"
+        >${run.passed ? "PASS" : "FAIL"}</span>
       </div>
       <p>${passed} passed · ${failed} failed</p>
       <p>${escapeHtml(run.description || "No description provided.")}</p>
@@ -712,6 +858,7 @@ async function loadLastRun() {
   }
 }
 
+setupTooltips();
 setupRailNavigation();
 refreshNodes();
 loadTaxonomy();
