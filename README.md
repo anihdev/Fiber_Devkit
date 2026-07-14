@@ -9,11 +9,15 @@ to issues or CI runs.
 
 ## Hosted Demo
 
-The GitHub Pages demo lives in [`docs/index.html`](docs/index.html). It embeds
-self-hosted Asciinema cast files for the core CLI flow: network startup, funded
-payment, low-liquidity diagnosis, route prediction, and taxonomy explanation.
-The public [`docs/Devkit_screebshots/UI_actions/`](docs/Devkit_screebshots/UI_actions/) gallery collects full-resolution screenshots
-of the UI and key actions: architecture, console, reports, CI, lifecycle, and hosted deployment.
+- [Hosted GitHub Pages demo](https://anihdev.github.io/Fiber_Devkit/)
+- [UI and key-action screenshots](https://anihdev.github.io/Fiber_Devkit/Devkit_screebshots/UI_actions/)
+- [YouTube video walkthrough](https://youtu.be/n5azZeMgHfQ)
+
+The hosted demo source lives in [`docs/index.html`](docs/index.html). It embeds self-hosted
+Asciinema cast files for network startup, funded payment, low-liquidity diagnosis, route
+prediction, and taxonomy explanation. The screenshot gallery source lives in
+[`docs/Devkit_screebshots/UI_actions/`](docs/Devkit_screebshots/UI_actions/) and covers the
+architecture, console, reports, CI, lifecycle, and hosted deployment.
 
 Until the crate is published, `make setup` installs support-script dependencies and
 installs the local `fiber` binary from this checkout.
