@@ -12,6 +12,8 @@ to issues or CI runs.
 The GitHub Pages demo lives in [`docs/index.html`](docs/index.html). It embeds
 self-hosted Asciinema cast files for the core CLI flow: network startup, funded
 payment, low-liquidity diagnosis, route prediction, and taxonomy explanation.
+The public [`docs/Devkit_screebshots/UI_actions/`](docs/Devkit_screebshots/UI_actions/) gallery collects full-resolution screenshots
+of the UI and key actions: architecture, console, reports, CI, lifecycle, and hosted deployment.
 
 Until the crate is published, `make setup` installs support-script dependencies and
 installs the local `fiber` binary from this checkout.
