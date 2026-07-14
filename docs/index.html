@@ -356,6 +356,114 @@
       gap: 18px;
     }
 
+    .closing-flow-section {
+      background: #eef5fb;
+    }
+
+    .closing-flow-map {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 22px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .closing-flow-step {
+      --stage: var(--blue);
+      --stage-soft: #edf4ff;
+      position: relative;
+      min-width: 0;
+      min-height: 174px;
+      padding: 18px 16px;
+      border: 1px solid var(--line);
+      border-top: 4px solid var(--stage);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 14px 30px rgba(24, 32, 42, 0.06);
+    }
+
+    .closing-flow-step.scenarios {
+      --stage: var(--green);
+      --stage-soft: #eaf5f1;
+    }
+
+    .closing-flow-step.diagnosis {
+      --stage: var(--red);
+      --stage-soft: #f9edf0;
+    }
+
+    .closing-flow-step.prediction {
+      --stage: var(--amber);
+      --stage-soft: #fff6e6;
+    }
+
+    .closing-flow-step.reports {
+      --stage: #527184;
+      --stage-soft: #eef3f7;
+    }
+
+    .closing-flow-step.ci {
+      --stage: var(--ink);
+      --stage-soft: #eef0f2;
+    }
+
+    .closing-flow-step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      right: -18px;
+      width: 13px;
+      height: 2px;
+      background: #8c98a6;
+    }
+
+    .closing-flow-step:not(:last-child)::before {
+      content: "";
+      position: absolute;
+      z-index: 2;
+      top: calc(50% - 4px);
+      right: -22px;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      border-left: 7px solid #8c98a6;
+    }
+
+    .closing-flow-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 14px;
+      border: 1px solid var(--stage);
+      border-radius: 6px;
+      color: var(--stage);
+      background: var(--stage-soft);
+      font: 760 0.74rem/1 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .closing-flow-step h3 {
+      margin: 0 0 8px;
+      font-size: 1rem;
+    }
+
+    .closing-flow-step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .closing-flow-step code {
+      display: inline-block;
+      margin-bottom: 7px;
+      color: var(--stage);
+      background: var(--stage-soft);
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
     .console-replay {
       --console-paper: #FAFAF8;
       --console-raised: #FFFFFF;
@@ -513,6 +621,33 @@
 
       .replay-nodes {
         grid-template-columns: 1fr;
+      }
+
+      .closing-flow-map {
+        grid-template-columns: 1fr;
+        gap: 28px;
+      }
+
+      .closing-flow-step {
+        min-height: 0;
+      }
+
+      .closing-flow-step:not(:last-child)::after {
+        top: auto;
+        right: calc(50% - 1px);
+        bottom: -20px;
+        width: 2px;
+        height: 14px;
+      }
+
+      .closing-flow-step:not(:last-child)::before {
+        top: auto;
+        right: calc(50% - 5px);
+        bottom: -26px;
+        border-top: 7px solid #8c98a6;
+        border-right: 5px solid transparent;
+        border-bottom: 0;
+        border-left: 5px solid transparent;
       }
 
       .hero {
@@ -1014,6 +1149,53 @@ fiber down</pre>
             <p>Live CCH order execution, alerting, full peer detail, payment-hash lookup, graph SVG, watchtower scenarios, and fee-policy simulation.</p>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="closing-flow-section" id="complete-flow">
+      <div class="shell">
+        <div class="section-head">
+          <h2>From Local Network to CI</h2>
+          <p class="section-copy">One connected workflow carries Fiber development from repeatable local conditions to actionable results and automated integration checks.</p>
+        </div>
+        <ol class="closing-flow-map" aria-label="Fiber DevKit complete development flow">
+          <li class="closing-flow-step network">
+            <span class="closing-flow-number">01</span>
+            <h3>Local Network</h3>
+            <code>fiber init · up</code>
+            <p>Start a controlled multi-node FNN environment.</p>
+          </li>
+          <li class="closing-flow-step scenarios">
+            <span class="closing-flow-number">02</span>
+            <h3>Scenarios</h3>
+            <code>fiber run</code>
+            <p>Exercise successful payments and expected failures.</p>
+          </li>
+          <li class="closing-flow-step diagnosis">
+            <span class="closing-flow-number">03</span>
+            <h3>Diagnosis</h3>
+            <code>fiber doctor</code>
+            <p>Translate real failures into causes and remediation.</p>
+          </li>
+          <li class="closing-flow-step prediction">
+            <span class="closing-flow-number">04</span>
+            <h3>Route Confidence</h3>
+            <code>fiber predict</code>
+            <p>Assess route viability, warnings, and CCH availability.</p>
+          </li>
+          <li class="closing-flow-step reports">
+            <span class="closing-flow-number">05</span>
+            <h3>Reports</h3>
+            <code>--report</code>
+            <p>Persist Markdown, structured logs, and trace artifacts.</p>
+          </li>
+          <li class="closing-flow-step ci">
+            <span class="closing-flow-number">06</span>
+            <h3>CI</h3>
+            <code>fiber ci init</code>
+            <p>Carry the same repeatable checks into automation.</p>
+          </li>
+        </ol>
       </div>
     </section>
   </main>
